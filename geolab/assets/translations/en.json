@@ -1,0 +1,140 @@
+{
+  "app": {
+    "title": "Geolab",
+    "settings": "Settings",
+    "description": "Rock Classification App"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "refresh": "Refresh",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "done": "Done",
+    "skip": "Skip",
+    "retry": "Retry",
+    "ok": "OK",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "navigation": {
+    "home": "Home",
+    "camera": "Camera",
+    "gallery": "Gallery",
+    "settings": "Settings",
+    "searchHistory": "Search History",
+    "historyItem": "History Item",
+    "historyPreview": "Response preview for item"
+  },
+  "camera": {
+    "permissionRequired": "Camera permission is required",
+    "noCamerasFound": "No cameras found",
+    "error": "Camera error",
+    "captureError": "Error capturing image",
+    "galleryError": "Error picking image from gallery",
+    "saved": "Image saved successfully",
+    "positionRock": "Position rock within frame",
+    "remove": "Remove",
+    "save": "Save"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "name": "Full Name",
+    "forgotPassword": "Forgot Password?",
+    "noAccount": "Don't have an account? Sign Up",
+    "hasAccount": "Already have an account? Sign In",
+    "logout": {
+      "title": "Logout",
+      "confirm": "Confirm Logout",
+      "confirmMessage": "Are you sure you want to logout?"
+    },
+    "resetPassword": {
+      "title": "Reset Password",
+      "description": "Enter your email address and we'll send you a link to reset your password.",
+      "cancel": "Cancel",
+      "sendLink": "Send Reset Link",
+      "success": "Password reset link sent successfully"
+    },
+    "error": {
+      "passwordsDoNotMatch": "Passwords do not match",
+      "invalidCredentials": "Invalid email or password",
+      "networkError": "Network error. Please check your connection.",
+      "unknown": "An unknown error occurred"
+    }
+  },
+  "settings": {
+    "profile": {
+      "title": "Profile",
+      "subtitle": "Manage your account settings and preferences",
+      "userName": "User Name",
+      "userEmail": "user@example.com"
+    },
+    "theme": {
+      "title": "Theme",
+      "mode": "Theme Mode",
+      "lightMode": "Light Mode",
+      "darkMode": "Dark Mode",
+      "system": "System Default",
+      "systemDescription": "Follow system theme settings"
+    },
+    "language": {
+      "title": "Language",
+      "current": "Current Language",
+      "select": "Select Language",
+      "rtl": "Right-to-Left Support",
+      "rtlDescription": "Enable RTL layout for Arabic and other RTL languages"
+    },
+    "appearance": {
+      "title": "Appearance",
+      "colors": "Colors",
+      "colorsDescription": "Customize app colors and themes",
+      "typography": "Typography",
+      "typographyDescription": "Adjust font sizes and styles",
+      "colorsComingSoon": "Color customization coming soon",
+      "typographyComingSoon": "Typography customization coming soon"
+    },
+    "about": {
+      "title": "About",
+      "version": "Version",
+      "license": "License",
+      "licenseText": "This app is licensed under the MIT License."
+    }
+  },
+  "rockClassification": {
+    "title": "Rock Classification",
+    "analyzing": "Analyzing rock...",
+    "result": "Rock Classification Result",
+    "confidence": "Confidence",
+    "description": "Rock Description",
+    "properties": "Properties",
+    "mineralComposition": "Mineral Composition",
+    "texture": "Texture",
+    "color": "Color",
+    "hardness": "Hardness",
+    "density": "Density",
+    "rockType": "Rock Type",
+    "error": "Classification Failed"
+  },
+  "feedback": {
+    "title": "Feedback",
+    "rate": "Rate this result",
+    "comment": "Add a comment",
+    "submit": "Submit Feedback",
+    "improveModel": "Help improve our model"
+  }
+} 

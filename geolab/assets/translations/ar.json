@@ -1,0 +1,140 @@
+{
+  "app": {
+    "title": "جيولاب",
+    "settings": "الإعدادات",
+    "description": "تطبيق تصنيف الصخور"
+  },
+  "common": {
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "close": "إغلاق",
+    "loading": "جاري التحميل...",
+    "error": "خطأ",
+    "success": "نجح",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "add": "إضافة",
+    "search": "بحث",
+    "filter": "تصفية",
+    "sort": "ترتيب",
+    "refresh": "تحديث",
+    "back": "رجوع",
+    "next": "التالي",
+    "previous": "السابق",
+    "done": "تم",
+    "skip": "تخطي",
+    "retry": "إعادة المحاولة",
+    "ok": "موافق",
+    "yes": "نعم",
+    "no": "لا"
+  },
+  "navigation": {
+    "home": "الرئيسية",
+    "camera": "الكاميرا",
+    "gallery": "المعرض",
+    "settings": "الإعدادات",
+    "searchHistory": "البحث في التاريخ",
+    "historyItem": "عنصر التاريخ",
+    "historyPreview": "معاينة الاستجابة للعنصر"
+  },
+  "camera": {
+    "permissionRequired": "مطلوب إذن الكاميرا",
+    "noCamerasFound": "لم يتم العثور على كاميرات",
+    "error": "خطأ في الكاميرا",
+    "captureError": "خطأ في التقاط الصورة",
+    "galleryError": "خطأ في اختيار الصورة من المعرض",
+    "saved": "تم حفظ الصورة بنجاح",
+    "positionRock": "ضع الصخرة داخل الإطار",
+    "remove": "إزالة",
+    "save": "حفظ"
+  },
+  "auth": {
+    "signIn": "تسجيل الدخول",
+    "signUp": "إنشاء حساب",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "confirmPassword": "تأكيد كلمة المرور",
+    "name": "الاسم الكامل",
+    "forgotPassword": "نسيت كلمة المرور؟",
+    "noAccount": "ليس لديك حساب؟ إنشاء حساب",
+    "hasAccount": "لديك حساب بالفعل؟ تسجيل الدخول",
+    "logout": {
+      "title": "تسجيل الخروج",
+      "confirm": "تأكيد تسجيل الخروج",
+      "confirmMessage": "هل أنت متأكد من أنك تريد تسجيل الخروج؟"
+    },
+    "resetPassword": {
+      "title": "إعادة تعيين كلمة المرور",
+      "description": "أدخل عنوان بريدك الإلكتروني وسنرسل لك رابطاً لإعادة تعيين كلمة المرور.",
+      "cancel": "إلغاء",
+      "sendLink": "إرسال رابط إعادة التعيين",
+      "success": "تم إرسال رابط إعادة تعيين كلمة المرور بنجاح"
+    },
+    "error": {
+      "passwordsDoNotMatch": "كلمات المرور غير متطابقة",
+      "invalidCredentials": "بريد إلكتروني أو كلمة مرور غير صحيحة",
+      "networkError": "خطأ في الشبكة. يرجى التحقق من اتصالك.",
+      "unknown": "حدث خطأ غير معروف"
+    }
+  },
+  "settings": {
+    "profile": {
+      "title": "الملف الشخصي",
+      "subtitle": "إدارة إعدادات حسابك وتفضيلاتك",
+      "userName": "اسم المستخدم",
+      "userEmail": "user@example.com"
+    },
+    "theme": {
+      "title": "المظهر",
+      "mode": "وضع المظهر",
+      "lightMode": "الوضع الفاتح",
+      "darkMode": "الوضع الداكن",
+      "system": "افتراضي النظام",
+      "systemDescription": "اتباع إعدادات مظهر النظام"
+    },
+    "language": {
+      "title": "اللغة",
+      "current": "اللغة الحالية",
+      "select": "اختر اللغة",
+      "rtl": "دعم من اليمين إلى اليسار",
+      "rtlDescription": "تمكين التخطيط من اليمين إلى اليسار للعربية واللغات الأخرى"
+    },
+    "appearance": {
+      "title": "المظهر",
+      "colors": "الألوان",
+      "colorsDescription": "تخصيص ألوان ومواضيع التطبيق",
+      "typography": "الخط",
+      "typographyDescription": "ضبط أحجام وأنماط الخطوط",
+      "colorsComingSoon": "تخصيص الألوان قريباً",
+      "typographyComingSoon": "تخصيص الخط قريباً"
+    },
+    "about": {
+      "title": "حول",
+      "version": "الإصدار",
+      "license": "الترخيص",
+      "licenseText": "هذا التطبيق مرخص تحت رخصة MIT."
+    }
+  },
+  "rockClassification": {
+    "title": "تصنيف الصخور",
+    "analyzing": "جاري تحليل الصخرة...",
+    "result": "نتيجة تصنيف الصخرة",
+    "confidence": "الثقة",
+    "description": "وصف الصخرة",
+    "properties": "الخصائص",
+    "mineralComposition": "التكوين المعدني",
+    "texture": "الملمس",
+    "color": "اللون",
+    "hardness": "الصلابة",
+    "density": "الكثافة",
+    "rockType": "نوع الصخرة",
+    "error": "فشل التصنيف"
+  },
+  "feedback": {
+    "title": "التعليقات",
+    "rate": "قيّم هذه النتيجة",
+    "comment": "أضف تعليقاً",
+    "submit": "إرسال التعليق",
+    "improveModel": "ساعد في تحسين نموذجنا"
+  }
+} 

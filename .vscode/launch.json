@@ -1,0 +1,34 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Flutter",
+            "type": "dart",
+            "request": "launch",
+            "program": "geolab/lib/main.dart"
+        },
+        {
+            "name": "geolab",
+            "cwd": "geolab",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "geolab (profile mode)",
+            "cwd": "geolab",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile"
+        },
+        {
+            "name": "geolab (release mode)",
+            "cwd": "geolab",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release"
+        }
+    ]
+}
