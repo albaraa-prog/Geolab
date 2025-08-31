@@ -21,7 +21,14 @@ class ProtectedRoute extends StatelessWidget {
           if (state is AuthLoading) {
             return const Scaffold(
               body: Center(
-                child: CircularProgressIndicator(),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text('Checking authentication...'),
+                  ],
+                ),
               ),
             );
           }
@@ -33,7 +40,14 @@ class ProtectedRoute extends StatelessWidget {
           // If not authenticated, show loading while redirecting
           return const Scaffold(
             body: Center(
-              child: CircularProgressIndicator(),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Redirecting to login...'),
+                ],
+              ),
             ),
           );
         },

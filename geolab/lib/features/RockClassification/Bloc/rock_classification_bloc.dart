@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:geolab/Service/api_service.dart';
 import 'package:geolab/Service/rock_classification_service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -12,11 +13,14 @@ import 'rock_classification_state.dart';
 class RockClassificationBloc
     extends Bloc<RockClassificationEvent, RockClassificationState> {
   final RockClassificationService _classificationService;
+  final ApiService _apiService;
 
   RockClassificationBloc({
     RockClassificationService? classificationService,
+    ApiService? apiService,
   })  : _classificationService =
             classificationService ?? RockClassificationServiceImpl(),
+        _apiService = apiService ?? ApiService(),
         super(RockClassificationInitial()) {
     on<InitializeCamera>(_onInitializeCamera);
     on<CaptureImage>(_onCaptureImage);
@@ -95,6 +99,28 @@ class RockClassificationBloc
   ) async {
     emit(Classifying(event.image));
     try {
+      // Check if user is authenticated
+      final isAuthenticated = await _apiService.isAuthenticated();
+      if (!isAuthenticated) {
+        emit(const ClassificationError(
+            'Please log in to use rock classification'));
+        return;
+      }
+
+      // Check subscription status
+      try {
+        final subscription = await _apiService.getSubscriptionStatus();
+        if (!subscription.canMakeRequests) {
+          emit(const ClassificationError(
+            'Daily limit reached. Please upgrade your subscription or try again tomorrow.',
+          ));
+          return;
+        }
+      } catch (e) {
+        // If we can't get subscription status, continue with classification
+        print('Warning: Could not verify subscription status: $e');
+      }
+
       final result = await _classificationService.classifyRock(event.image);
       emit(ClassificationComplete(
         rockType: result.rockType,

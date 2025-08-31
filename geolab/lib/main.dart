@@ -11,6 +11,7 @@ import 'package:geolab/features/Settings/bloc/settings_bloc.dart';
 import 'package:geolab/features/Settings/components/localization.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -51,7 +52,9 @@ class GeolabApp extends StatelessWidget {
               )..add(AuthCheckRequested()),
             ),
             BlocProvider<RockClassificationBloc>(
-              create: (context) => RockClassificationBloc(),
+              create: (context) => RockClassificationBloc(
+                apiService: ApiService(),
+              ),
             ),
           ],
           child: MultiProvider(
@@ -83,11 +86,22 @@ class GeolabApp extends StatelessWidget {
                   // Router configuration
                   routerConfig: router,
 
-                  // Builder to handle theme changes
+                  // Web-specific configurations
+                  scrollBehavior: kIsWeb ? const MaterialScrollBehavior() : null,
+
+                  // Builder to handle theme changes and responsive design
                   builder: (context, child) {
                     return Theme(
                       data: themeService.currentTheme,
-                      child: child!,
+                      child: MediaQuery(
+                        data: MediaQuery.of(context).copyWith(
+                          // Ensure minimum text scale factor for web
+                          textScaleFactor: kIsWeb 
+                              ? MediaQuery.of(context).textScaleFactor.clamp(0.8, 1.2)
+                              : MediaQuery.of(context).textScaleFactor,
+                        ),
+                        child: child!,
+                      ),
                     );
                   },
                 );

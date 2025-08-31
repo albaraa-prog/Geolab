@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <!--
     If you are serving your web app in a path other than the root, change the
@@ -18,21 +18,132 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="Geolab - Advanced Rock Classification using AI. Identify and classify rocks with high accuracy using our machine learning-powered application.">
+  <meta name="keywords" content="rock classification, geology, AI, machine learning, mineral identification, geoscience">
+  <meta name="author" content="Geolab Team">
+  <meta name="robots" content="index, follow">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://geolab.app/">
+  <meta property="og:title" content="Geolab - Rock Classification AI">
+  <meta property="og:description" content="Advanced Rock Classification using AI. Identify and classify rocks with high accuracy.">
+  <meta property="og:image" content="icons/Icon-512.png">
 
-  <!-- iOS meta tags & icons -->
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://geolab.app/">
+  <meta property="twitter:title" content="Geolab - Rock Classification AI">
+  <meta property="twitter:description" content="Advanced Rock Classification using AI. Identify and classify rocks with high accuracy.">
+  <meta property="twitter:image" content="icons/Icon-512.png">
+
+  <!-- Web App Capabilities -->
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="geolab">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Geolab">
+  <meta name="application-name" content="Geolab">
+  <meta name="msapplication-TileColor" content="#1976D2">
+  <meta name="theme-color" content="#1976D2">
+  
+  <!-- iOS meta tags & icons -->
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="icons/Icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/Icon-512.png">
+  <link rel="apple-touch-icon" sizes="167x167" href="icons/Icon-192.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/Icon-192.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="icons/Icon-192.png">
 
-  <title>geolab</title>
+  <title>Geolab - Rock Classification AI</title>
   <link rel="manifest" href="manifest.json">
+  
+  <!-- Preload critical resources -->
+  <link rel="preload" href="flutter_bootstrap.js" as="script">
+  
+  <!-- Custom CSS for web-specific styling -->
+  <style>
+    /* Web-specific loading styles */
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: linear-gradient(135deg, #1976D2 0%, #42A5F5 100%);
+      color: white;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .loading-content {
+      text-align: center;
+    }
+    
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+      margin: 0 auto 20px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .loading-title {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    
+    .loading-subtitle {
+      font-size: 16px;
+      opacity: 0.8;
+    }
+    
+    /* Responsive design for web */
+    @media (max-width: 768px) {
+      .loading-title {
+        font-size: 20px;
+      }
+      .loading-subtitle {
+        font-size: 14px;
+      }
+    }
+  </style>
 </head>
 <body>
+  <!-- Loading screen for web -->
+  <div id="loading" class="loading">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <div class="loading-title">Geolab</div>
+      <div class="loading-subtitle">Loading Rock Classification AI...</div>
+    </div>
+  </div>
+  
+  <script>
+    // Hide loading screen when Flutter is ready
+    window.addEventListener('load', function() {
+      // Remove loading screen after a short delay to ensure smooth transition
+      setTimeout(function() {
+        const loading = document.getElementById('loading');
+        if (loading) {
+          loading.style.opacity = '0';
+          loading.style.transition = 'opacity 0.5s ease-out';
+          setTimeout(function() {
+            loading.remove();
+          }, 500);
+        }
+      }, 1000);
+    });
+  </script>
+  
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
