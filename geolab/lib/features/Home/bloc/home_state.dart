@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:io' as io;
 
 import 'package:equatable/equatable.dart';
 
@@ -18,7 +18,7 @@ class HomeLoading extends HomeState {
 }
 
 class HomeLoaded extends HomeState {
-  final File? capturedImage;
+  final io.File? capturedImage;
   final bool isTakingPicture;
   final int currentCameraIndex;
 
@@ -33,7 +33,7 @@ class HomeLoaded extends HomeState {
       [capturedImage, isTakingPicture, currentCameraIndex];
 
   HomeLoaded copyWith({
-    File? capturedImage,
+    io.File? capturedImage,
     bool? isTakingPicture,
     int? currentCameraIndex,
   }) {

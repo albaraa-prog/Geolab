@@ -1,18 +1,18 @@
-import 'dart:io';
+import 'dart:io' as io;
 
 import 'package:geolab/Service/api_service.dart';
 import 'package:geolab/models/prediction_model.dart';
 import 'package:geolab/models/rock_model.dart';
 
 abstract class RockClassificationService {
-  Future<RockClassification> classifyRock(File image);
+  Future<RockClassification> classifyRock(io.File image);
 }
 
 class RockClassificationServiceImpl implements RockClassificationService {
   final ApiService _apiService = ApiService();
 
   @override
-  Future<RockClassification> classifyRock(File image) async {
+  Future<RockClassification> classifyRock(io.File image) async {
     try {
       // Validate image size before sending
       final fileSize = await image.length();

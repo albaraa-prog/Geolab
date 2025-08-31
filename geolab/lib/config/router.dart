@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolab/config/ProtectedRoute.dart';
 import 'package:geolab/features/Auth/Bloc/auth_bloc.dart';
+import 'package:geolab/features/Auth/SignInPage.dart';
 import 'package:geolab/features/Auth/SignUpPage.dart';
 import 'package:geolab/features/Home/home_screen.dart';
+import 'package:geolab/features/Settings/SettingsPage.dart';
 import 'package:go_router/go_router.dart';
 
 final router = GoRouter(
@@ -21,7 +23,9 @@ final router = GoRouter(
     }
 
     // If we're on protected pages and user is not authenticated, redirect to sign-in
-    if (state.matchedLocation == '/') {
+    if (state.matchedLocation == '/' ||
+        state.matchedLocation == '/settings' ||
+        state.matchedLocation == '/profile') {
       if (authState is AuthUnauthenticated) {
         return '/sign-in';
       }
@@ -32,7 +36,7 @@ final router = GoRouter(
   routes: [
     GoRoute(
       path: '/sign-in',
-      builder: (context, state) => const HomePage(),
+      builder: (context, state) => const SignInPage(),
     ),
     GoRoute(
       path: '/sign-up',
@@ -42,6 +46,18 @@ final router = GoRouter(
       path: '/',
       builder: (context, state) => const ProtectedRoute(
         child: HomePage(),
+      ),
+    ),
+    GoRoute(
+      path: '/settings',
+      builder: (context, state) => const ProtectedRoute(
+        child: SettingsPage(),
+      ),
+    ),
+    GoRoute(
+      path: '/profile',
+      builder: (context, state) => const ProtectedRoute(
+        child: SettingsPage(), // Profile is part of settings for now
       ),
     ),
   ],

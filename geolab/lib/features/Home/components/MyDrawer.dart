@@ -3,6 +3,7 @@ import 'package:geolab/features/Settings/SettingsPage.dart';
 import 'package:geolab/utils/rtl_wrapper.dart';
 import 'package:geolab/utils/app_localizations.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:go_router/go_router.dart';
 
 class MyDrawer extends StatelessWidget {
   const MyDrawer({super.key});
@@ -52,14 +53,7 @@ class MyDrawer extends StatelessWidget {
                   title: Text(context.t('navigation.settings')),
                   onTap: () {
                     Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const Scaffold(
-                          body: SettingsPage(),
-                        ),
-                      ),
-                    );
+                    context.go('/settings');
                   },
                 ),
                 ListTile(

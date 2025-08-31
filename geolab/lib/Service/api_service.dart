@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:io' as io;
 
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -171,7 +171,7 @@ class ApiService {
   }
 
   // Prediction Methods
-  Future<PredictionModel> predictRockType(File imageFile) async {
+  Future<PredictionModel> predictRockType(io.File imageFile) async {
     try {
       print('Sending image: ${imageFile.path}');
 

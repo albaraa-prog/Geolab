@@ -44,13 +44,21 @@
     "captureError": "Error capturing image",
     "galleryError": "Error picking image from gallery",
     "saved": "Image saved successfully",
+    "saveError": "Error saving image",
     "positionRock": "Position rock within frame",
     "remove": "Remove",
-    "save": "Save"
+    "save": "Save",
+    "selectImage": "Select an image"
   },
   "auth": {
-    "signIn": "Sign In",
-    "signUp": "Sign Up",
+    "signIn": {
+      "title": "Sign In",
+      "subtitle": "Sign in to your account",
+      "button": "Sign In"
+    },
+    "signUp": {
+      "button": "Sign Up"
+    },
     "email": "Email",
     "password": "Password",
     "confirmPassword": "Confirm Password",
@@ -67,7 +75,7 @@
       "title": "Reset Password",
       "description": "Enter your email address and we'll send you a link to reset your password.",
       "cancel": "Cancel",
-      "sendLink": "Send Reset Link",
+      "send": "Send",
       "success": "Password reset link sent successfully"
     },
     "error": {

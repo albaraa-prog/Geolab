@@ -1,25 +1,25 @@
 import 'dart:async';
-import 'dart:io';
+import 'dart:html' as html;
+import 'dart:io' as io;
 import 'dart:typed_data';
 
 import 'package:camera/camera.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolab/features/Home/components/MyCircleButton.dart';
 import 'package:geolab/features/Home/components/MyDrawer.dart';
 import 'package:geolab/features/RockClassification/Bloc/rock_classification_bloc.dart';
 import 'package:geolab/features/RockClassification/Bloc/rock_classification_event.dart';
 import 'package:geolab/features/RockClassification/Bloc/rock_classification_state.dart';
-import 'package:geolab/utils/rtl_wrapper.dart';
 import 'package:geolab/utils/app_localizations.dart';
 import 'package:geolab/utils/responsive_layout.dart';
+import 'package:geolab/utils/rtl_wrapper.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:share_plus/share_plus.dart';
-import 'dart:html' as html;
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -34,7 +34,8 @@ class _HomePageState extends State<HomePage> {
   late Future<void> _initializeControllerFuture;
   List<CameraDescription>? cameras;
   int _currentCameraIndex = 0;
-  File? _capturedImage;
+  io.File? _capturedImage;
+  Uint8List? _capturedImageBytes;
   bool _isTakingPicture = false;
 
   // NEW: Track flash state
@@ -88,7 +89,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void _classifyImage(File imageFile) {
+  void _classifyImage(io.File imageFile) {
     context.read<RockClassificationBloc>().add(ClassifyRock(imageFile));
   }
 
@@ -107,7 +108,7 @@ class _HomePageState extends State<HomePage> {
 
     try {
       final XFile imageFile = await _controller.takePicture();
-      final File image = File(imageFile.path);
+      final io.File image = io.File(imageFile.path);
       setState(() {
         _capturedImage = image;
         _isTakingPicture = false;
@@ -136,10 +137,22 @@ class _HomePageState extends State<HomePage> {
       );
 
       if (image != null) {
-        setState(() {
-          _capturedImage = File(image.path);
-        });
-        _classifyImage(_capturedImage!);
+        if (kIsWeb) {
+          // On web, store the bytes directly
+          final bytes = await image.readAsBytes();
+          setState(() {
+            _capturedImageBytes = bytes;
+            _capturedImage = null;
+          });
+          // For web, we need to handle classification differently
+          // TODO: Implement web image classification
+        } else {
+          setState(() {
+            _capturedImage = io.File(image.path);
+            _capturedImageBytes = null;
+          });
+          _classifyImage(_capturedImage!);
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -197,10 +210,11 @@ class _HomePageState extends State<HomePage> {
         html.Url.revokeObjectUrl(url);
       } else {
         final directory = await getApplicationDocumentsDirectory();
-        final imagePath = '${directory.path}/rock_image_${DateTime.now().millisecondsSinceEpoch}.jpg';
-        final imageFile = File(imagePath);
+        final imagePath =
+            '${directory.path}/rock_image_${DateTime.now().millisecondsSinceEpoch}.jpg';
+        final imageFile = io.File(imagePath);
         await imageFile.writeAsBytes(bytes);
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(context.t('camera.saved'))),
@@ -262,7 +276,12 @@ class _HomePageState extends State<HomePage> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        SizedBox(height: ResponsiveLayout.getResponsiveSpacing(context, mobile: 12, tablet: 16, desktop: 20)),
+                        SizedBox(
+                            height: ResponsiveLayout.getResponsiveSpacing(
+                                context,
+                                mobile: 12,
+                                tablet: 16,
+                                desktop: 20)),
                         Text(
                           '${context.t('rockClassification.rockType')}: ${state.rockType}',
                           style: TextStyle(
@@ -286,7 +305,12 @@ class _HomePageState extends State<HomePage> {
                             color: Colors.grey,
                           ),
                         ),
-                        SizedBox(height: ResponsiveLayout.getResponsiveSpacing(context, mobile: 20, tablet: 24, desktop: 28)),
+                        SizedBox(
+                            height: ResponsiveLayout.getResponsiveSpacing(
+                                context,
+                                mobile: 20,
+                                tablet: 24,
+                                desktop: 28)),
                         Align(
                           alignment: RTLUtils.endAlignment(context),
                           child: ElevatedButton(
@@ -330,7 +354,12 @@ class _HomePageState extends State<HomePage> {
                             color: Colors.red,
                           ),
                         ),
-                        SizedBox(height: ResponsiveLayout.getResponsiveSpacing(context, mobile: 12, tablet: 16, desktop: 20)),
+                        SizedBox(
+                            height: ResponsiveLayout.getResponsiveSpacing(
+                                context,
+                                mobile: 12,
+                                tablet: 16,
+                                desktop: 20)),
                         Text(
                           state.message,
                           style: TextStyle(
@@ -342,7 +371,12 @@ class _HomePageState extends State<HomePage> {
                             ),
                           ),
                         ),
-                        SizedBox(height: ResponsiveLayout.getResponsiveSpacing(context, mobile: 20, tablet: 24, desktop: 28)),
+                        SizedBox(
+                            height: ResponsiveLayout.getResponsiveSpacing(
+                                context,
+                                mobile: 20,
+                                tablet: 24,
+                                desktop: 28)),
                         ElevatedButton(
                           onPressed: () => Navigator.pop(context),
                           child: Text(context.t('common.close')),
@@ -410,7 +444,8 @@ class _HomePageState extends State<HomePage> {
                         icon: Icon(
                           HugeIcons.strokeRoundedSidebarRight01,
                           color: Colors.white,
-                          size: ResponsiveLayout.getResponsiveIconSize(context, mobile: 45, tablet: 50, desktop: 55),
+                          size: ResponsiveLayout.getResponsiveIconSize(context,
+                              mobile: 45, tablet: 50, desktop: 55),
                         ),
                         onPressed: () =>
                             _scaffoldKey.currentState!.openDrawer(),
@@ -424,7 +459,11 @@ class _HomePageState extends State<HomePage> {
                                 ? HugeIcons.strokeRoundedFlash
                                 : HugeIcons.strokeRoundedFlashOff,
                             color: Colors.white,
-                            size: ResponsiveLayout.getResponsiveIconSize(context, mobile: 40, tablet: 45, desktop: 50),
+                            size: ResponsiveLayout.getResponsiveIconSize(
+                                context,
+                                mobile: 40,
+                                tablet: 45,
+                                desktop: 50),
                           ),
                           onPressed: _toggleFlash,
                         ),
@@ -447,10 +486,15 @@ class _HomePageState extends State<HomePage> {
                     child: _capturedImage != null
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(20),
-                            child: Image.file(
-                              _capturedImage!,
-                              fit: BoxFit.cover,
-                            ),
+                            child: kIsWeb
+                                ? Image.memory(
+                                    _capturedImageBytes!,
+                                    fit: BoxFit.cover,
+                                  )
+                                : Image.file(
+                                    _capturedImage!,
+                                    fit: BoxFit.cover,
+                                  ),
                           )
                         : _isTakingPicture
                             ? const Center(
@@ -464,16 +508,31 @@ class _HomePageState extends State<HomePage> {
                                   Icon(
                                     HugeIcons.strokeRoundedCameraSmile01,
                                     color: Colors.white.withOpacity(0.8),
-                                    size: ResponsiveLayout.getResponsiveIconSize(context, mobile: 50, tablet: 60, desktop: 70),
+                                    size:
+                                        ResponsiveLayout.getResponsiveIconSize(
+                                            context,
+                                            mobile: 50,
+                                            tablet: 60,
+                                            desktop: 70),
                                   ),
-                                  SizedBox(height: ResponsiveLayout.getResponsiveSpacing(context, mobile: 16, tablet: 20, desktop: 24)),
+                                  SizedBox(
+                                      height:
+                                          ResponsiveLayout.getResponsiveSpacing(
+                                              context,
+                                              mobile: 16,
+                                              tablet: 20,
+                                              desktop: 24)),
                                   Text(
-                                    kIsWeb 
+                                    kIsWeb
                                         ? context.t('camera.selectImage')
                                         : context.t('camera.positionRock'),
                                     style: TextStyle(
                                       color: Colors.white.withOpacity(0.8),
-                                      fontSize: ResponsiveLayout.getResponsiveFontSize(context, mobile: 16, tablet: 18, desktop: 20),
+                                      fontSize: ResponsiveLayout
+                                          .getResponsiveFontSize(context,
+                                              mobile: 16,
+                                              tablet: 18,
+                                              desktop: 20),
                                     ),
                                     textAlign: TextAlign.center,
                                   ),
@@ -482,7 +541,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ),
-              if (_capturedImage != null)
+              if (_capturedImage != null || _capturedImageBytes != null)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 6),
                   child: Row(
@@ -492,20 +551,29 @@ class _HomePageState extends State<HomePage> {
                         onPressed: () {
                           setState(() {
                             _capturedImage = null;
+                            _capturedImageBytes = null;
                           });
                         },
                         child: Text(
                           context.t('camera.remove'),
                           style: TextStyle(
-                            fontSize: ResponsiveLayout.getResponsiveFontSize(context, mobile: 20, tablet: 22, desktop: 24),
+                            fontSize: ResponsiveLayout.getResponsiveFontSize(
+                                context,
+                                mobile: 20,
+                                tablet: 22,
+                                desktop: 24),
                             color: Colors.white,
                           ),
                         ),
                       ),
-                      SizedBox(width: ResponsiveLayout.getResponsiveSpacing(context, mobile: 16, tablet: 20, desktop: 24)),
+                      SizedBox(
+                          width: ResponsiveLayout.getResponsiveSpacing(context,
+                              mobile: 16, tablet: 20, desktop: 24)),
                       TextButton(
                         onPressed: () {
-                          if (_capturedImage != null) {
+                          if (kIsWeb && _capturedImageBytes != null) {
+                            _saveImage(_capturedImageBytes!);
+                          } else if (_capturedImage != null) {
                             _capturedImage!.readAsBytes().then((bytes) {
                               _saveImage(bytes);
                             });
@@ -514,7 +582,11 @@ class _HomePageState extends State<HomePage> {
                         child: Text(
                           context.t('camera.save'),
                           style: TextStyle(
-                            fontSize: ResponsiveLayout.getResponsiveFontSize(context, mobile: 20, tablet: 22, desktop: 24),
+                            fontSize: ResponsiveLayout.getResponsiveFontSize(
+                                context,
+                                mobile: 20,
+                                tablet: 22,
+                                desktop: 24),
                             color: Colors.white,
                           ),
                         ),
@@ -535,8 +607,13 @@ class _HomePageState extends State<HomePage> {
                       GestureDetector(
                         onTap: _captureImage,
                         child: Container(
-                          width: ResponsiveLayout.getResponsiveIconSize(context, mobile: 70, tablet: 80, desktop: 90),
-                          height: ResponsiveLayout.getResponsiveIconSize(context, mobile: 70, tablet: 80, desktop: 90),
+                          width: ResponsiveLayout.getResponsiveIconSize(context,
+                              mobile: 70, tablet: 80, desktop: 90),
+                          height: ResponsiveLayout.getResponsiveIconSize(
+                              context,
+                              mobile: 70,
+                              tablet: 80,
+                              desktop: 90),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
@@ -552,8 +629,8 @@ class _HomePageState extends State<HomePage> {
                             ],
                           ),
                           child: _isTakingPicture
-                              ? Padding(
-                                  padding: const EdgeInsets.all(12.0),
+                              ? const Padding(
+                                  padding: EdgeInsets.all(12.0),
                                   child: CircularProgressIndicator(
                                     color: Colors.white,
                                     strokeWidth: 3,
@@ -611,28 +688,31 @@ class _HomePageState extends State<HomePage> {
                 child: Text(
                   'Geolab',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).primaryColor,
-                  ),
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).primaryColor,
+                      ),
                 ),
               ),
               // Navigation items
               ListTile(
-                leading: Icon(Icons.home, color: Theme.of(context).primaryColor),
-                title: Text('Home'),
+                leading:
+                    Icon(Icons.home, color: Theme.of(context).primaryColor),
+                title: const Text('Home'),
                 onTap: () {},
               ),
               ListTile(
-                leading: Icon(Icons.settings, color: Theme.of(context).primaryColor),
-                title: Text('Settings'),
-                onTap: () {},
+                leading:
+                    Icon(Icons.settings, color: Theme.of(context).primaryColor),
+                title: const Text('Settings'),
+                onTap: () => context.go('/settings'),
               ),
               const Spacer(),
               // User info or logout
               ListTile(
-                leading: Icon(Icons.person, color: Theme.of(context).primaryColor),
-                title: Text('Profile'),
-                onTap: () {},
+                leading:
+                    Icon(Icons.person, color: Theme.of(context).primaryColor),
+                title: const Text('Profile'),
+                onTap: () => context.go('/profile'),
               ),
             ],
           ),

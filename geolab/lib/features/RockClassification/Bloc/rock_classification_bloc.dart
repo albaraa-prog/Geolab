@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:io' as io;
 
 import 'package:camera/camera.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -67,7 +67,7 @@ class RockClassificationBloc
       final currentState = state as CameraInitialized;
       try {
         final imageFile = await currentState.controller.takePicture();
-        final image = File(imageFile.path);
+        final image = io.File(imageFile.path);
         emit(ImageCaptured(image));
         add(ClassifyRock(image));
       } catch (e) {
@@ -84,7 +84,7 @@ class RockClassificationBloc
       final picker = ImagePicker();
       final pickedFile = await picker.pickImage(source: ImageSource.gallery);
       if (pickedFile != null) {
-        final image = File(pickedFile.path);
+        final image = io.File(pickedFile.path);
         emit(ImageCaptured(image));
         add(ClassifyRock(image));
       }

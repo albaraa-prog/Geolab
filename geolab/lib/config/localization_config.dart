@@ -6,14 +6,6 @@ class LocalizationConfig {
   static const List<Locale> supportedLocales = [
     Locale('en', 'US'), // English
     Locale('ar', 'SA'), // Arabic
-    Locale('fr', 'FR'), // French
-    Locale('es', 'ES'), // Spanish
-    Locale('de', 'DE'), // German
-    Locale('zh', 'CN'), // Chinese
-    Locale('ja', 'JP'), // Japanese
-    Locale('ko', 'KR'), // Korean
-    Locale('pt', 'BR'), // Portuguese
-    Locale('ru', 'RU'), // Russian
   ];
 
   // Default locale
@@ -33,22 +25,6 @@ class LocalizationConfig {
         return 'English';
       case 'ar':
         return 'العربية';
-      case 'fr':
-        return 'Français';
-      case 'es':
-        return 'Español';
-      case 'de':
-        return 'Deutsch';
-      case 'zh':
-        return '中文';
-      case 'ja':
-        return '日本語';
-      case 'ko':
-        return '한국어';
-      case 'pt':
-        return 'Português';
-      case 'ru':
-        return 'Русский';
       default:
         return locale.languageCode.toUpperCase();
     }
@@ -61,22 +37,6 @@ class LocalizationConfig {
         return '🇺🇸';
       case 'ar':
         return '🇸🇦';
-      case 'fr':
-        return '🇫🇷';
-      case 'es':
-        return '🇪🇸';
-      case 'de':
-        return '🇩🇪';
-      case 'zh':
-        return '🇨🇳';
-      case 'ja':
-        return '🇯🇵';
-      case 'ko':
-        return '🇰🇷';
-      case 'pt':
-        return '🇧🇷';
-      case 'ru':
-        return '🇷🇺';
       default:
         return '🌐';
     }
@@ -84,9 +44,7 @@ class LocalizationConfig {
 
   // Check if locale is RTL
   static bool isRTL(Locale locale) {
-    return locale.languageCode == 'ar' || 
-           locale.languageCode == 'he' || 
-           locale.languageCode == 'fa';
+    return locale.languageCode == 'ar';
   }
 
   // Get text direction for locale
@@ -126,10 +84,10 @@ class LocalizationConfig {
   // Check if locale is supported
   static bool isLocaleSupported(Locale locale) {
     return supportedLocales.any(
-      (supportedLocale) => 
-        supportedLocale.languageCode == locale.languageCode &&
-        (supportedLocale.countryCode == null || 
-         supportedLocale.countryCode == locale.countryCode),
+      (supportedLocale) =>
+          supportedLocale.languageCode == locale.languageCode &&
+          (supportedLocale.countryCode == null ||
+              supportedLocale.countryCode == locale.countryCode),
     );
   }
 

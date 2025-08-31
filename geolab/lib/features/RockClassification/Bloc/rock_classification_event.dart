@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:io' as io;
 
 import 'package:equatable/equatable.dart';
 
@@ -16,7 +16,7 @@ class CaptureImage extends RockClassificationEvent {}
 class PickImageFromGallery extends RockClassificationEvent {}
 
 class ClassifyRock extends RockClassificationEvent {
-  final File image;
+  final io.File image;
 
   const ClassifyRock(this.image);
 

@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:io' as io;
 
 import 'package:equatable/equatable.dart';
 
@@ -14,7 +14,7 @@ class HomeInitialized extends HomeEvent {
 }
 
 class CameraCaptured extends HomeEvent {
-  final File image;
+  final io.File image;
   const CameraCaptured(this.image);
 
   @override
@@ -30,7 +30,7 @@ class ImageRemoved extends HomeEvent {
 }
 
 class ImageSaved extends HomeEvent {
-  final File image;
+  final io.File image;
   const ImageSaved(this.image);
 
   @override

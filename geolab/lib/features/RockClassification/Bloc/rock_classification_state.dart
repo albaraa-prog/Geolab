@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:io' as io;
 
 import 'package:camera/camera.dart';
 import 'package:equatable/equatable.dart';
@@ -37,7 +37,7 @@ class CameraError extends RockClassificationState {
 }
 
 class ImageCaptured extends RockClassificationState {
-  final File image;
+  final io.File image;
 
   const ImageCaptured(this.image);
 
@@ -46,7 +46,7 @@ class ImageCaptured extends RockClassificationState {
 }
 
 class Classifying extends RockClassificationState {
-  final File image;
+  final io.File image;
 
   const Classifying(this.image);
 
@@ -57,7 +57,7 @@ class Classifying extends RockClassificationState {
 class ClassificationComplete extends RockClassificationState {
   final String rockType;
   final double confidence;
-  final File image;
+  final io.File image;
   final Map<String, dynamic>? additionalData;
 
   const ClassificationComplete({
