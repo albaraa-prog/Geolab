@@ -43,12 +43,6 @@ final router = GoRouter(
       builder: (context, state) => const SignUpPage(),
     ),
     GoRoute(
-      path: '/',
-      builder: (context, state) => const ProtectedRoute(
-        child: HomePage(),
-      ),
-    ),
-    GoRoute(
       path: '/settings',
       builder: (context, state) => const ProtectedRoute(
         child: SettingsPage(),
@@ -58,6 +52,12 @@ final router = GoRouter(
       path: '/profile',
       builder: (context, state) => const ProtectedRoute(
         child: SettingsPage(), // Profile is part of settings for now
+      ),
+    ),
+    GoRoute(
+      path: '/',
+      builder: (context, state) => const ProtectedRoute(
+        child: HomePage(),
       ),
     ),
   ],

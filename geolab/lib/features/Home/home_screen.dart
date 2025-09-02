@@ -1,11 +1,11 @@
 import 'dart:async';
-import 'dart:html' as html;
 import 'dart:io' as io;
 import 'dart:typed_data';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolab/features/Home/components/MyCircleButton.dart';
 import 'package:geolab/features/Home/components/MyDrawer.dart';
@@ -201,13 +201,21 @@ class _HomePageState extends State<HomePage> {
   Future<void> _saveImage(Uint8List bytes) async {
     try {
       if (kIsWeb) {
-        // On web, trigger download
-        final blob = html.Blob([bytes]);
-        final url = html.Url.createObjectUrlFromBlob(blob);
-        final anchor = html.AnchorElement(href: url)
-          ..setAttribute('download', 'rock_image.jpg')
-          ..click();
-        html.Url.revokeObjectUrl(url);
+        // On web, use platform channel to trigger download
+        try {
+          const platform = MethodChannel('geolab/download');
+          await platform.invokeMethod('downloadImage', {
+            'bytes': bytes,
+            'filename': 'rock_image.jpg',
+          });
+        } catch (e) {
+          // Fallback: show message to user
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Download not supported on this platform')),
+            );
+          }
+        }
       } else {
         final directory = await getApplicationDocumentsDirectory();
         final imagePath =
