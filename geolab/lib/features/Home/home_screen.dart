@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io' as io;
-import 'dart:typed_data';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -30,22 +29,26 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  late CameraController _controller;
-  late Future<void> _initializeControllerFuture;
+  CameraController? _controller;
+  Future<void>? _initializeControllerFuture;
   List<CameraDescription>? cameras;
   int _currentCameraIndex = 0;
   io.File? _capturedImage;
   Uint8List? _capturedImageBytes;
   bool _isTakingPicture = false;
+  bool _isDisposed = false;
 
   // NEW: Track flash state
   bool _isFlashOn = false;
+
+  // NEW: Track camera switching state
+  bool _isSwitchingCamera = false;
 
   Future<void> _initializeCamera() async {
     try {
       // Skip camera initialization on web
       if (kIsWeb) {
-        setState(() {});
+        if (mounted && !_isDisposed) setState(() {});
         return;
       }
 
@@ -55,7 +58,7 @@ class _HomePageState extends State<HomePage> {
       ].request();
 
       if (statuses[Permission.camera] != PermissionStatus.granted) {
-        if (mounted) {
+        if (mounted && !_isDisposed) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(context.t('camera.permissionRequired'))),
           );
@@ -65,7 +68,7 @@ class _HomePageState extends State<HomePage> {
 
       cameras = await availableCameras();
       if (cameras == null || cameras!.isEmpty) {
-        if (mounted) {
+        if (mounted && !_isDisposed) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(context.t('camera.noCamerasFound'))),
           );
@@ -73,15 +76,21 @@ class _HomePageState extends State<HomePage> {
         return;
       }
 
+      // Dispose existing controller if any
+      if (_controller != null) {
+        await _controller?.dispose();
+        _controller = null;
+      }
+
       _controller = CameraController(
         cameras![_currentCameraIndex],
         ResolutionPreset.medium,
       );
 
-      _initializeControllerFuture = _controller.initialize();
-      if (mounted) setState(() {});
+      _initializeControllerFuture = _controller?.initialize();
+      if (mounted && !_isDisposed) setState(() {});
     } catch (e) {
-      if (mounted) {
+      if (mounted && !_isDisposed) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('${context.t('camera.error')}: $e')),
         );
@@ -100,25 +109,30 @@ class _HomePageState extends State<HomePage> {
       return;
     }
 
-    if (!_controller.value.isInitialized) return;
+    if (_isDisposed ||
+        _isSwitchingCamera ||
+        _controller == null ||
+        !(_controller?.value.isInitialized ?? false)) return;
 
     setState(() {
       _isTakingPicture = true;
     });
 
     try {
-      final XFile imageFile = await _controller.takePicture();
+      final XFile imageFile = await _controller!.takePicture();
       final io.File image = io.File(imageFile.path);
-      setState(() {
-        _capturedImage = image;
-        _isTakingPicture = false;
-      });
-      _classifyImage(image);
+      if (mounted && !_isDisposed) {
+        setState(() {
+          _capturedImage = image;
+          _isTakingPicture = false;
+        });
+        _classifyImage(image);
+      }
     } catch (e) {
-      setState(() {
-        _isTakingPicture = false;
-      });
-      if (mounted) {
+      if (mounted && !_isDisposed) {
+        setState(() {
+          _isTakingPicture = false;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('${context.t('camera.error')}: $e')),
         );
@@ -164,31 +178,65 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _flipCamera() async {
-    if (kIsWeb || cameras == null || cameras!.length < 2) return;
+    if (_isDisposed ||
+        kIsWeb ||
+        cameras == null ||
+        cameras!.length < 2 ||
+        _isSwitchingCamera) return;
 
-    setState(() {
-      _currentCameraIndex = (_currentCameraIndex + 1) % cameras!.length;
-    });
+    try {
+      _isSwitchingCamera = true;
 
-    await _controller.dispose();
-    _controller = CameraController(
-      cameras![_currentCameraIndex],
-      ResolutionPreset.medium,
-    );
-    _initializeControllerFuture = _controller.initialize();
-    setState(() {});
+      // Dispose current controller safely
+      if (_controller != null) {
+        await _controller?.dispose();
+        _controller = null;
+      }
+
+      // Update camera index
+      setState(() {
+        _currentCameraIndex = (_currentCameraIndex + 1) % cameras!.length;
+      });
+
+      // Create new controller
+      _controller = CameraController(
+        cameras![_currentCameraIndex],
+        ResolutionPreset.medium,
+      );
+
+      _initializeControllerFuture = _controller?.initialize();
+
+      if (mounted && !_isDisposed) {
+        setState(() {});
+      }
+
+      _isSwitchingCamera = false;
+    } catch (e) {
+      _isSwitchingCamera = false;
+      if (mounted && !_isDisposed) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error switching camera: $e')),
+        );
+      }
+    }
   }
 
   void _toggleFlash() async {
-    if (kIsWeb || !_controller.value.isInitialized) return;
+    if (_isDisposed ||
+        _isSwitchingCamera ||
+        kIsWeb ||
+        _controller == null ||
+        !(_controller?.value.isInitialized ?? false)) return;
 
     try {
-      await _controller.setFlashMode(
+      await _controller?.setFlashMode(
         _isFlashOn ? FlashMode.off : FlashMode.torch,
       );
-      setState(() {
-        _isFlashOn = !_isFlashOn;
-      });
+      if (mounted && !_isDisposed) {
+        setState(() {
+          _isFlashOn = !_isFlashOn;
+        });
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -212,7 +260,8 @@ class _HomePageState extends State<HomePage> {
           // Fallback: show message to user
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Download not supported on this platform')),
+              const SnackBar(
+                  content: Text('Download not supported on this platform')),
             );
           }
         }
@@ -246,8 +295,11 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
-    if (!kIsWeb && _controller.value.isInitialized) {
-      _controller.dispose();
+    _isDisposed = true;
+    if (!kIsWeb &&
+        _controller != null &&
+        (_controller?.value.isInitialized ?? false)) {
+      _controller?.dispose();
     }
     super.dispose();
   }
@@ -413,13 +465,22 @@ class _HomePageState extends State<HomePage> {
   Widget _buildMobileLayout() {
     return Stack(
       children: [
-        if (cameras != null && cameras!.isNotEmpty && !kIsWeb)
+        if (cameras != null &&
+            cameras!.isNotEmpty &&
+            !kIsWeb &&
+            !_isDisposed &&
+            !_isSwitchingCamera)
           FutureBuilder<void>(
             future: _initializeControllerFuture,
             builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
+              if (snapshot.connectionState == ConnectionState.done &&
+                  _controller != null &&
+                  !_isDisposed &&
+                  !_isSwitchingCamera &&
+                  _controller!.value.isInitialized &&
+                  !snapshot.hasError) {
                 return SizedBox.expand(
-                  child: CameraPreview(_controller),
+                  child: CameraPreview(_controller!),
                 );
               }
               return Center(
@@ -429,7 +490,9 @@ class _HomePageState extends State<HomePage> {
                     const CircularProgressIndicator(),
                     const SizedBox(height: 16),
                     Text(
-                      context.t('common.loading'),
+                      _isSwitchingCamera
+                          ? 'Switching camera...'
+                          : context.t('common.loading'),
                       style: const TextStyle(fontSize: 16),
                     ),
                   ],

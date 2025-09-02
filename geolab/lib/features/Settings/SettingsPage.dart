@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:provider/provider.dart';
+import 'package:geolab/config/theme_service.dart';
 import 'package:geolab/features/Settings/bloc/settings_bloc.dart';
 import 'package:geolab/features/Settings/bloc/settings_event.dart';
 import 'package:geolab/features/Settings/bloc/settings_state.dart';
 import 'package:geolab/features/Settings/components/localization.dart';
-import 'package:geolab/config/theme_service.dart';
-import 'package:geolab/config/localization_config.dart';
 import 'package:geolab/utils/custom_back_button.dart';
 import 'package:geolab/utils/rtl_wrapper.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:provider/provider.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -51,7 +50,8 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildProfileSection(BuildContext context, LocalizationService localizationService) {
+  Widget _buildProfileSection(
+      BuildContext context, LocalizationService localizationService) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -72,8 +72,11 @@ class SettingsPage extends StatelessWidget {
             Text(
               localizationService.translate('settings.profile.subtitle'),
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-              ),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withOpacity(0.7),
+                  ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -82,7 +85,8 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildThemeSection(BuildContext context, ThemeService themeService, SettingsState state) {
+  Widget _buildThemeSection(
+      BuildContext context, ThemeService themeService, SettingsState state) {
     return Card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -94,7 +98,9 @@ class SettingsPage extends StatelessWidget {
               context: context,
             ),
             child: Text(
-              context.read<LocalizationService>().translate('settings.theme.title'),
+              context
+                  .read<LocalizationService>()
+                  .translate('settings.theme.title'),
               style: Theme.of(context).textTheme.titleLarge,
             ),
           ),
@@ -104,19 +110,25 @@ class SettingsPage extends StatelessWidget {
               color: Theme.of(context).colorScheme.primary,
             ),
             title: Text(
-              context.read<LocalizationService>().translate('settings.theme.mode'),
+              context
+                  .read<LocalizationService>()
+                  .translate('settings.theme.mode'),
             ),
             subtitle: Text(
-              state.isDarkMode 
-                ? context.read<LocalizationService>().translate('settings.theme.darkMode')
-                : context.read<LocalizationService>().translate('settings.theme.lightMode'),
+              state.isDarkMode
+                  ? context
+                      .read<LocalizationService>()
+                      .translate('settings.theme.darkMode')
+                  : context
+                      .read<LocalizationService>()
+                      .translate('settings.theme.lightMode'),
             ),
             trailing: Switch(
               value: state.isDarkMode,
               onChanged: (value) {
                 context.read<SettingsBloc>().add(
-                  ThemeToggled(isDarkMode: value),
-                );
+                      ThemeToggled(isDarkMode: value),
+                    );
                 themeService.setTheme(value);
               },
             ),
@@ -127,10 +139,14 @@ class SettingsPage extends StatelessWidget {
               color: Theme.of(context).colorScheme.secondary,
             ),
             title: Text(
-              context.read<LocalizationService>().translate('settings.theme.system'),
+              context
+                  .read<LocalizationService>()
+                  .translate('settings.theme.system'),
             ),
             subtitle: Text(
-              context.read<LocalizationService>().translate('settings.theme.systemDescription'),
+              context
+                  .read<LocalizationService>()
+                  .translate('settings.theme.systemDescription'),
             ),
             trailing: Switch(
               value: themeService.useSystemTheme,
@@ -144,7 +160,8 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildLanguageSection(BuildContext context, LocalizationService localizationService, SettingsState state) {
+  Widget _buildLanguageSection(BuildContext context,
+      LocalizationService localizationService, SettingsState state) {
     return Card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -156,7 +173,9 @@ class SettingsPage extends StatelessWidget {
               context: context,
             ),
             child: Text(
-              context.read<LocalizationService>().translate('settings.language.title'),
+              context
+                  .read<LocalizationService>()
+                  .translate('settings.language.title'),
               style: Theme.of(context).textTheme.titleLarge,
             ),
           ),
@@ -166,10 +185,13 @@ class SettingsPage extends StatelessWidget {
               color: Theme.of(context).colorScheme.primary,
             ),
             title: Text(
-              context.read<LocalizationService>().translate('settings.language.current'),
+              context
+                  .read<LocalizationService>()
+                  .translate('settings.language.current'),
             ),
             subtitle: Text(
-              localizationService.getLocaleDisplayName(localizationService.currentLocale),
+              localizationService
+                  .getLocaleDisplayName(localizationService.currentLocale),
             ),
             trailing: Icon(
               RTLUtils.chevronIcon(context),
@@ -183,10 +205,14 @@ class SettingsPage extends StatelessWidget {
                 color: Theme.of(context).colorScheme.secondary,
               ),
               title: Text(
-                context.read<LocalizationService>().translate('settings.language.rtl'),
+                context
+                    .read<LocalizationService>()
+                    .translate('settings.language.rtl'),
               ),
               subtitle: Text(
-                context.read<LocalizationService>().translate('settings.language.rtlDescription'),
+                context
+                    .read<LocalizationService>()
+                    .translate('settings.language.rtlDescription'),
               ),
             ),
         ],
@@ -194,7 +220,8 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildAppearanceSection(BuildContext context, ThemeService themeService) {
+  Widget _buildAppearanceSection(
+      BuildContext context, ThemeService themeService) {
     return Card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -206,7 +233,9 @@ class SettingsPage extends StatelessWidget {
               context: context,
             ),
             child: Text(
-              context.read<LocalizationService>().translate('settings.appearance.title'),
+              context
+                  .read<LocalizationService>()
+                  .translate('settings.appearance.title'),
               style: Theme.of(context).textTheme.titleLarge,
             ),
           ),
@@ -216,10 +245,14 @@ class SettingsPage extends StatelessWidget {
               color: Theme.of(context).colorScheme.primary,
             ),
             title: Text(
-              context.read<LocalizationService>().translate('settings.appearance.colors'),
+              context
+                  .read<LocalizationService>()
+                  .translate('settings.appearance.colors'),
             ),
             subtitle: Text(
-              context.read<LocalizationService>().translate('settings.appearance.colorsDescription'),
+              context
+                  .read<LocalizationService>()
+                  .translate('settings.appearance.colorsDescription'),
             ),
             trailing: Icon(
               RTLUtils.chevronIcon(context),
@@ -232,10 +265,14 @@ class SettingsPage extends StatelessWidget {
               color: Theme.of(context).colorScheme.secondary,
             ),
             title: Text(
-              context.read<LocalizationService>().translate('settings.appearance.typography'),
+              context
+                  .read<LocalizationService>()
+                  .translate('settings.appearance.typography'),
             ),
             subtitle: Text(
-              context.read<LocalizationService>().translate('settings.appearance.typographyDescription'),
+              context
+                  .read<LocalizationService>()
+                  .translate('settings.appearance.typographyDescription'),
             ),
             trailing: Icon(
               RTLUtils.chevronIcon(context),
@@ -247,7 +284,8 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildAboutSection(BuildContext context, LocalizationService localizationService) {
+  Widget _buildAboutSection(
+      BuildContext context, LocalizationService localizationService) {
     return Card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -259,7 +297,9 @@ class SettingsPage extends StatelessWidget {
               context: context,
             ),
             child: Text(
-              context.read<LocalizationService>().translate('settings.about.title'),
+              context
+                  .read<LocalizationService>()
+                  .translate('settings.about.title'),
               style: Theme.of(context).textTheme.titleLarge,
             ),
           ),
@@ -269,7 +309,9 @@ class SettingsPage extends StatelessWidget {
               color: Theme.of(context).colorScheme.primary,
             ),
             title: Text(
-              context.read<LocalizationService>().translate('settings.about.version'),
+              context
+                  .read<LocalizationService>()
+                  .translate('settings.about.version'),
             ),
             subtitle: const Text('1.0.0'),
           ),
@@ -279,7 +321,9 @@ class SettingsPage extends StatelessWidget {
               color: Theme.of(context).colorScheme.secondary,
             ),
             title: Text(
-              context.read<LocalizationService>().translate('settings.about.license'),
+              context
+                  .read<LocalizationService>()
+                  .translate('settings.about.license'),
             ),
             trailing: Icon(
               RTLUtils.chevronIcon(context),
@@ -291,13 +335,16 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  void _showLanguageDialog(BuildContext context, LocalizationService localizationService) {
+  void _showLanguageDialog(
+      BuildContext context, LocalizationService localizationService) {
     showDialog(
       context: context,
       builder: (context) => RTLWrapper(
         child: AlertDialog(
           title: Text(
-            context.read<LocalizationService>().translate('settings.language.select'),
+            context
+                .read<LocalizationService>()
+                .translate('settings.language.select'),
           ),
           content: SizedBox(
             width: double.maxFinite,
@@ -306,8 +353,9 @@ class SettingsPage extends StatelessWidget {
               itemCount: localizationService.availableLanguages.length,
               itemBuilder: (context, index) {
                 final language = localizationService.availableLanguages[index];
-                final isCurrent = language['code'] == localizationService.currentLocale.languageCode;
-                
+                final isCurrent = language['code'] ==
+                    localizationService.currentLocale.languageCode;
+
                 return ListTile(
                   leading: Text(
                     language['flag']!,
@@ -315,7 +363,9 @@ class SettingsPage extends StatelessWidget {
                   ),
                   title: Text(language['name']!),
                   subtitle: Text(language['code']!.toUpperCase()),
-                  trailing: isCurrent ? const Icon(Icons.check, color: Colors.green) : null,
+                  trailing: isCurrent
+                      ? const Icon(Icons.check, color: Colors.green)
+                      : null,
                   onTap: () {
                     localizationService.setLanguageCode(language['code']!);
                     Navigator.of(context).pop();
@@ -342,7 +392,9 @@ class SettingsPage extends StatelessWidget {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          context.read<LocalizationService>().translate('settings.appearance.colorsComingSoon'),
+          context
+              .read<LocalizationService>()
+              .translate('settings.appearance.colorsComingSoon'),
         ),
       ),
     );
@@ -353,7 +405,9 @@ class SettingsPage extends StatelessWidget {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          context.read<LocalizationService>().translate('settings.appearance.typographyComingSoon'),
+          context
+              .read<LocalizationService>()
+              .translate('settings.appearance.typographyComingSoon'),
         ),
       ),
     );
@@ -367,7 +421,9 @@ class SettingsPage extends StatelessWidget {
       applicationIcon: const Icon(Icons.rocket_launch),
       children: [
         Text(
-          context.read<LocalizationService>().translate('settings.about.licenseText'),
+          context
+              .read<LocalizationService>()
+              .translate('settings.about.licenseText'),
         ),
       ],
     );

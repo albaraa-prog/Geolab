@@ -66,8 +66,8 @@
     "confirmPassword": "Confirm Password",
     "name": "Full Name",
     "forgotPassword": "Forgot Password?",
-    "noAccount": "Don't have an account? ",
-    "hasAccount": "Already have an account? ",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
     "logout": {
       "title": "Logout",
       "confirm": "Confirm Logout",
