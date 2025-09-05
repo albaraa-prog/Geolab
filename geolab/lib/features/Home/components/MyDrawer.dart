@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:geolab/features/Settings/SettingsPage.dart';
-import 'package:geolab/utils/rtl_wrapper.dart';
 import 'package:geolab/utils/app_localizations.dart';
+import 'package:geolab/utils/rtl_wrapper.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:go_router/go_router.dart';
 
 class MyDrawer extends StatelessWidget {
   const MyDrawer({super.key});
@@ -53,7 +52,12 @@ class MyDrawer extends StatelessWidget {
                   title: Text(context.t('navigation.settings')),
                   onTap: () {
                     Navigator.pop(context);
-                    context.go('/settings');
+                    // context.go('/settings');
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SettingsPage(),
+                        ));
                   },
                 ),
                 ListTile(
@@ -131,8 +135,10 @@ class MyDrawer extends StatelessWidget {
                 itemBuilder: (context, index) {
                   return ListTile(
                     leading: const Icon(HugeIcons.strokeRoundedAbacus),
-                    title: Text('${context.t('navigation.historyItem')} $index'),
-                    subtitle: Text('${context.t('navigation.historyPreview')} $index'),
+                    title:
+                        Text('${context.t('navigation.historyItem')} $index'),
+                    subtitle: Text(
+                        '${context.t('navigation.historyPreview')} $index'),
                     onTap: () {
                       // Handle opening past conversation
                     },
