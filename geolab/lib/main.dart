@@ -96,9 +96,9 @@ class GeolabApp extends StatelessWidget {
                       child: MediaQuery(
                         data: MediaQuery.of(context).copyWith(
                           // Ensure minimum text scale factor for web
-                          textScaleFactor: kIsWeb 
+                          textScaler: TextScaler.linear(kIsWeb 
                               ? MediaQuery.of(context).textScaleFactor.clamp(0.8, 1.2)
-                              : MediaQuery.of(context).textScaleFactor,
+                              : MediaQuery.of(context).textScaleFactor),
                         ),
                         child: child!,
                       ),

@@ -112,7 +112,9 @@ class _HomePageState extends State<HomePage> {
     if (_isDisposed ||
         _isSwitchingCamera ||
         _controller == null ||
-        !(_controller?.value.isInitialized ?? false)) return;
+        !(_controller?.value.isInitialized ?? false)) {
+      return;
+    }
 
     setState(() {
       _isTakingPicture = true;
@@ -182,7 +184,9 @@ class _HomePageState extends State<HomePage> {
         kIsWeb ||
         cameras == null ||
         cameras!.length < 2 ||
-        _isSwitchingCamera) return;
+        _isSwitchingCamera) {
+      return;
+    }
 
     try {
       _isSwitchingCamera = true;
@@ -226,7 +230,9 @@ class _HomePageState extends State<HomePage> {
         _isSwitchingCamera ||
         kIsWeb ||
         _controller == null ||
-        !(_controller?.value.isInitialized ?? false)) return;
+        !(_controller?.value.isInitialized ?? false)) {
+      return;
+    }
 
     try {
       await _controller?.setFlashMode(

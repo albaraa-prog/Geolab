@@ -37,7 +37,7 @@ class AppThemeUtils {
   static Color get dividerColor => _service.dividerColor;
 
   /// Get input decoration theme
-  static InputDecorationTheme get inputDecorationTheme => _service.inputDecorationTheme;
+  static InputDecorationThemeData get inputDecorationTheme => _service.inputDecorationTheme;
 
   /// Get elevated button theme
   static ElevatedButtonThemeData get elevatedButtonTheme => _service.elevatedButtonTheme;
@@ -55,7 +55,7 @@ class AppThemeUtils {
   static CardThemeData get cardTheme => _service.cardTheme;
 
   /// Get app bar theme
-  static AppBarTheme get appBarTheme => _service.appBarTheme;
+  static AppBarThemeData get appBarTheme => _service.appBarTheme;
 
   /// Get text theme
   static TextTheme get textTheme => _service.textTheme;

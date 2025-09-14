@@ -45,12 +45,10 @@ class AppTheme {
         secondary: secondaryColor,
         secondaryContainer: secondaryLightColor,
         surface: Colors.white,
-        background: neutral50,
         error: errorColor,
         onPrimary: Colors.white,
         onSecondary: Colors.white,
         onSurface: neutral900,
-        onBackground: neutral900,
         onError: Colors.white,
       ),
       appBarTheme: const AppBarTheme(
@@ -64,7 +62,7 @@ class AppTheme {
           fontWeight: FontWeight.w600,
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: Colors.white,
         elevation: 2,
         shape: RoundedRectangleBorder(
@@ -121,14 +119,14 @@ class AppTheme {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
       switchTheme: SwitchThemeData(
-        thumbColor: MaterialStateProperty.resolveWith((states) {
-          if (states.contains(MaterialState.selected)) {
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
             return primaryColor;
           }
           return neutral400;
         }),
-        trackColor: MaterialStateProperty.resolveWith((states) {
-          if (states.contains(MaterialState.selected)) {
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
             return primaryColor.withOpacity(0.5);
           }
           return neutral300;
@@ -229,12 +227,10 @@ class AppTheme {
         secondary: secondaryLightColor,
         secondaryContainer: secondaryColor,
         surface: neutral800,
-        background: neutral900,
         error: errorColor,
         onPrimary: neutral900,
         onSecondary: neutral900,
         onSurface: neutral100,
-        onBackground: neutral100,
         onError: Colors.white,
       ),
       appBarTheme: const AppBarTheme(
@@ -248,7 +244,7 @@ class AppTheme {
           fontWeight: FontWeight.w600,
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: neutral800,
         elevation: 4,
         shape: RoundedRectangleBorder(
@@ -305,14 +301,14 @@ class AppTheme {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
       switchTheme: SwitchThemeData(
-        thumbColor: MaterialStateProperty.resolveWith((states) {
-          if (states.contains(MaterialState.selected)) {
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
             return primaryLightColor;
           }
           return neutral500;
         }),
-        trackColor: MaterialStateProperty.resolveWith((states) {
-          if (states.contains(MaterialState.selected)) {
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
             return primaryLightColor.withOpacity(0.5);
           }
           return neutral600;

@@ -78,7 +78,7 @@ class ThemeService extends ChangeNotifier {
   Color get dividerColor => _isDarkMode ? AppTheme.neutral700 : AppTheme.neutral200;
 
   // Get input decoration theme based on current theme
-  InputDecorationTheme get inputDecorationTheme {
+  InputDecorationThemeData get inputDecorationTheme {
     return _isDarkMode 
         ? AppTheme.darkTheme.inputDecorationTheme 
         : AppTheme.lightTheme.inputDecorationTheme;
@@ -120,7 +120,7 @@ class ThemeService extends ChangeNotifier {
   }
 
   // Get app bar theme based on current theme
-  AppBarTheme get appBarTheme {
+  AppBarThemeData get appBarTheme {
     return _isDarkMode 
         ? AppTheme.darkTheme.appBarTheme 
         : AppTheme.lightTheme.appBarTheme;
