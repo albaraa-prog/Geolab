@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolab/features/Auth/Bloc/auth_bloc.dart';
+import 'package:geolab/features/Auth/Bloc/auth_state.dart';
 import 'package:go_router/go_router.dart';
 
 class ProtectedRoute extends StatelessWidget {

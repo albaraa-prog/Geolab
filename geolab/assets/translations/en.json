@@ -61,6 +61,7 @@
       "subtitle": "Create your account",
       "button": "Sign Up"
     },
+    
     "email": "Email",
     "password": "Password",
     "confirmPassword": "Confirm Password",
@@ -79,6 +80,19 @@
       "cancel": "Cancel",
       "send": "Send",
       "success": "Password reset link sent successfully"
+    },
+    "otp": {
+      "title": "Verify Your Email",
+      "subtitle": "We've sent you a verification code",
+      "description": "Please enter the 6-digit code we sent to {email}",
+      "label": "Verification Code",
+      "verify": "Verify & Create Account",
+      "sent": "Verification code sent to your email",
+      "resent": "Verification code resent",
+      "didntReceive": "Didn't receive the code?",
+      "resend": "Resend",
+      "required": "Verification code is required",
+      "invalid": "Please enter a valid 6-digit code"
     },
     "error": {
       "passwordsDoNotMatch": "Passwords do not match",

@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolab/config/ProtectedRoute.dart';
 import 'package:geolab/features/Auth/Bloc/auth_bloc.dart';
+import 'package:geolab/features/Auth/Bloc/auth_state.dart';
 import 'package:geolab/features/Auth/SignInPage.dart';
 import 'package:geolab/features/Auth/SignUpPage.dart';
+import 'package:geolab/features/Auth/otp_test_page.dart';
 import 'package:geolab/features/Home/home_screen.dart';
 import 'package:geolab/features/Settings/SettingsPage.dart';
 import 'package:go_router/go_router.dart';
@@ -36,7 +38,7 @@ final router = GoRouter(
   routes: [
     GoRoute(
       path: '/sign-in',
-      builder: (context, state) => const SignInPage(),
+      builder: (context, state) => const OTPTestPage(), //const SignInPage(),
     ),
     GoRoute(
       path: '/sign-up',

@@ -1,81 +1,9 @@
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolab/Service/api_service.dart';
+import 'package:geolab/features/Auth/Bloc/auth_event.dart';
+import 'package:geolab/features/Auth/Bloc/auth_state.dart';
 import 'package:geolab/models/user_model.dart';
 
-// Events
-abstract class AuthEvent extends Equatable {
-  const AuthEvent();
-
-  @override
-  List<Object?> get props => [];
-}
-
-class AuthLoginRequested extends AuthEvent {
-  final String email;
-  final String password;
-
-  const AuthLoginRequested({
-    required this.email,
-    required this.password,
-  });
-
-  @override
-  List<Object?> get props => [email, password];
-}
-
-class AuthRegisterRequested extends AuthEvent {
-  final String email;
-  final String password;
-  final String subscriptionTier;
-
-  const AuthRegisterRequested({
-    required this.email,
-    required this.password,
-    this.subscriptionTier = 'free',
-  });
-
-  @override
-  List<Object?> get props => [email, password, subscriptionTier];
-}
-
-class AuthLogoutRequested extends AuthEvent {}
-
-class AuthCheckRequested extends AuthEvent {}
-
-// States
-abstract class AuthState extends Equatable {
-  const AuthState();
-
-  @override
-  List<Object?> get props => [];
-}
-
-class AuthInitial extends AuthState {}
-
-class AuthLoading extends AuthState {}
-
-class AuthAuthenticated extends AuthState {
-  final UserModel user;
-
-  const AuthAuthenticated(this.user);
-
-  @override
-  List<Object?> get props => [user];
-}
-
-class AuthUnauthenticated extends AuthState {}
-
-class AuthError extends AuthState {
-  final String message;
-
-  const AuthError(this.message);
-
-  @override
-  List<Object?> get props => [message];
-}
-
-// Bloc
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final ApiService _apiService;
 
@@ -84,6 +12,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         super(AuthInitial()) {
     on<AuthLoginRequested>(_onLoginRequested);
     on<AuthRegisterRequested>(_onRegisterRequested);
+    on<AuthSendOTPRequested>(_onSendOTPRequested);
+    on<AuthResendOTPRequested>(_onResendOTPRequested);
+    on<AuthVerifyOTPAndRegister>(_onVerifyOTPAndRegister);
     on<AuthLogoutRequested>(_onLogoutRequested);
     on<AuthCheckRequested>(_onCheckRequested);
   }
@@ -100,9 +31,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
 
       final user = UserModel.fromJson(response['user']);
-      emit(AuthAuthenticated(user));
+      emit(AuthAuthenticated(user: user));
     } catch (e) {
-      emit(AuthError(e.toString()));
+      emit(AuthError(message: e.toString()));
     }
   }
 
@@ -119,9 +50,62 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
 
       final user = UserModel.fromJson(response['user']);
-      emit(AuthAuthenticated(user));
+      emit(AuthAuthenticated(user: user));
     } catch (e) {
-      emit(AuthError(e.toString()));
+      emit(AuthError(message: e.toString()));
+    }
+  }
+
+  Future<void> _onSendOTPRequested(
+    AuthSendOTPRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    try {
+      final response = await _apiService.sendOTP(email: event.email);
+      emit(AuthOTPSent(
+        message: response['message'] ?? 'OTP sent successfully',
+        email: event.email,
+      ));
+    } catch (e) {
+      emit(AuthError(message: e.toString()));
+    }
+  }
+
+  Future<void> _onResendOTPRequested(
+    AuthResendOTPRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    try {
+      final response = await _apiService.resendOTP(email: event.email);
+      emit(AuthOTPSent(
+        message: response['message'] ?? 'OTP resent successfully',
+        email: event.email,
+      ));
+    } catch (e) {
+      emit(AuthError(message: e.toString()));
+    }
+  }
+
+  Future<void> _onVerifyOTPAndRegister(
+    AuthVerifyOTPAndRegister event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    try {
+      final response = await _apiService.verifyOTPAndRegister(
+        email: event.email,
+        name: event.name,
+        password: event.password,
+        otp: event.otp,
+        subscriptionTier: event.subscriptionTier,
+      );
+      
+      final user = UserModel.fromJson(response['user']);
+      emit(AuthAuthenticated(user: user));
+    } catch (e) {
+      emit(AuthError(message: e.toString()));
     }
   }
 
@@ -149,7 +133,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       if (isAuthenticated) {
         final user = await _apiService.getCurrentUser();
         if (user != null) {
-          emit(AuthAuthenticated(user));
+          emit(AuthAuthenticated(user: user));
         } else {
           emit(AuthUnauthenticated());
         }

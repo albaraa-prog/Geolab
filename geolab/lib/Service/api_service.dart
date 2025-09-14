@@ -70,35 +70,8 @@ class ApiService {
     await _storage.delete(key: AuthConstants.tokenKey);
   }
 
-  // Authentication Methods
-  Future<Map<String, dynamic>> register({
-    required String email,
-    required String password,
-    String subscriptionTier = 'free',
-  }) async {
-    try {
-      final response = await _dio.post(
-        '$baseUrl/user/register',
-        data: {
-          'email': email,
-          'password': password,
-          'subscription_tier': subscriptionTier,
-        },
-      );
 
-      if (response.statusCode == 201) {
-        final token = response.data['access_token'];
-        if (token != null) {
-          await _saveToken(token);
-        }
-        return response.data;
-      }
-
-      throw Exception('Registration failed');
-    } on DioException catch (e) {
-      throw _handleDioError(e);
-    }
-  }
+  
 
   Future<Map<String, dynamic>> login({
     required String email,
@@ -469,6 +442,147 @@ class ApiService {
 
   Future<String?> getAuthToken() async {
     return await _storage.read(key: AuthConstants.tokenKey);
+  }
+
+  
+  // OTP Methods for Email Verification
+  Future<Map<String, dynamic>> sendOTP({
+    required String email,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '$baseUrl/user/send-otp',
+        data: {
+          'email': email,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return response.data;
+      }
+
+      throw Exception('Failed to send OTP');
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> resendOTP({
+    required String email,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '$baseUrl/user/resend-otp',
+        data: {
+          'email': email,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return response.data;
+      }
+
+      throw Exception('Failed to resend OTP');
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> verifyOTPAndRegister({
+    required String email,
+    required String name,
+    required String password,
+    required String otp,
+    required String subscriptionTier,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '$baseUrl/user/verify-otp-register',
+        data: {
+          'email': email,
+          'name': name,
+          'password': password,
+          'otp': otp,
+          'subscription_tier': subscriptionTier,
+        },
+      );
+
+      if (response.statusCode == 201) {
+        final token = response.data['access_token'];
+        if (token != null) {
+          await _saveToken(token);
+        }
+        return response.data;
+      }
+
+      throw Exception('OTP verification or registration failed');
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
+  // Alternative method if you want to separate verification from registration
+  Future<Map<String, dynamic>> verifyOTP({
+    required String email,
+    required String otp,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '$baseUrl/user/verify-otp',
+        data: {
+          'email': email,
+          'otp': otp,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return response.data;
+      }
+
+      throw Exception('OTP verification failed');
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
+  // Updated register method to support name and email verification
+  Future<Map<String, dynamic>> register({
+    required String email,
+    required String password,
+    String? name,
+    String subscriptionTier = 'free',
+    bool isEmailVerified = false,
+  }) async {
+    try {
+      final requestData = {
+        'email': email,
+        'password': password,
+        'subscription_tier': subscriptionTier,
+        'is_email_verified': isEmailVerified,
+      };
+
+      // Only add name if provided
+      if (name != null && name.isNotEmpty) {
+        requestData['name'] = name;
+      }
+
+      final response = await _dio.post(
+        '$baseUrl/user/register',
+        data: requestData,
+      );
+
+      if (response.statusCode == 201) {
+        final token = response.data['access_token'];
+        if (token != null) {
+          await _saveToken(token);
+        }
+        return response.data;
+      }
+
+      throw Exception('Registration failed');
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
   }
 
   // Test connection method

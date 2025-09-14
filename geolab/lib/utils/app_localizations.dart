@@ -51,9 +51,15 @@ class AppLocalizations {
 }
 
 /// Extension for BuildContext to easily access translations
+
 extension LocalizationExtension on BuildContext {
   /// Get translation for a key
-  String t(String key) => AppLocalizations.t(key);
+  String t(String key, [Map<String, String>? params]) {
+    if (params != null) {
+      return AppLocalizations.tWithParams(key, params);
+    }
+    return AppLocalizations.t(key);
+  }
 
   /// Get translation with parameters
   String tWithParams(String key, Map<String, String> params) =>

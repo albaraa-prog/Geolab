@@ -6,6 +6,7 @@ import 'package:geolab/config/router.dart';
 import 'package:geolab/config/theme.dart';
 import 'package:geolab/config/theme_service.dart';
 import 'package:geolab/features/Auth/Bloc/auth_bloc.dart';
+import 'package:geolab/features/Auth/Bloc/auth_event.dart';
 import 'package:geolab/features/RockClassification/Bloc/rock_classification_bloc.dart';
 import 'package:geolab/features/Settings/bloc/settings_bloc.dart';
 import 'package:geolab/features/Settings/components/localization.dart';

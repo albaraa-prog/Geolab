@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolab/features/Auth/Bloc/auth_bloc.dart';
+import 'package:geolab/features/Auth/Bloc/auth_event.dart';
+import 'package:geolab/features/Auth/Bloc/auth_state.dart';
 import 'package:geolab/features/Auth/component/CustomButton.dart';
 import 'package:geolab/features/Auth/component/TextInputField.dart';
 import 'package:geolab/features/Auth/component/validators.dart';

@@ -7,11 +7,11 @@ abstract class AuthEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class SignInRequested extends AuthEvent {
+class AuthLoginRequested extends AuthEvent {
   final String email;
   final String password;
 
-  const SignInRequested({
+  const AuthLoginRequested({
     required this.email,
     required this.password,
   });
@@ -20,28 +20,58 @@ class SignInRequested extends AuthEvent {
   List<Object?> get props => [email, password];
 }
 
-class SignUpRequested extends AuthEvent {
+class AuthRegisterRequested extends AuthEvent {
   final String email;
   final String password;
-  final String name;
+  final String subscriptionTier;
 
-  const SignUpRequested({
+  const AuthRegisterRequested({
     required this.email,
     required this.password,
-    required this.name,
+    this.subscriptionTier = 'free',
   });
 
   @override
-  List<Object?> get props => [email, password, name];
+  List<Object?> get props => [email, password, subscriptionTier];
 }
 
-class SignOutRequested extends AuthEvent {}
-
-class PasswordResetRequested extends AuthEvent {
+class AuthSendOTPRequested extends AuthEvent {
   final String email;
 
-  const PasswordResetRequested({required this.email});
+  const AuthSendOTPRequested({required this.email});
 
   @override
   List<Object?> get props => [email];
 }
+
+class AuthResendOTPRequested extends AuthEvent {
+  final String email;
+
+  const AuthResendOTPRequested({required this.email});
+
+  @override
+  List<Object?> get props => [email];
+}
+
+class AuthVerifyOTPAndRegister extends AuthEvent {
+  final String email;
+  final String name;
+  final String password;
+  final String otp;
+  final String subscriptionTier;
+
+  const AuthVerifyOTPAndRegister({
+    required this.email,
+    required this.name,
+    required this.password,
+    required this.otp,
+    required this.subscriptionTier,
+  });
+
+  @override
+  List<Object?> get props => [email, name, password, otp, subscriptionTier];
+}
+
+class AuthLogoutRequested extends AuthEvent {}
+
+class AuthCheckRequested extends AuthEvent {}

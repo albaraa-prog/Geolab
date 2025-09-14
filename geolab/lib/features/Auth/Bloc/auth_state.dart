@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:geolab/models/user_model.dart';
 
 abstract class AuthState extends Equatable {
   const AuthState();
@@ -11,29 +12,47 @@ class AuthInitial extends AuthState {}
 
 class AuthLoading extends AuthState {}
 
-class Authenticated extends AuthState {
-  final String userId;
-  final String email;
+class AuthAuthenticated extends AuthState {
+  final UserModel user;
 
-  const Authenticated({
-    required this.userId,
-    required this.email,
-  });
+  const AuthAuthenticated({required this.user});
 
   @override
-  List<Object?> get props => [userId, email];
+  List<Object?> get props => [user];
 }
+
+class AuthUnauthenticated extends AuthState {}
 
 class AuthError extends AuthState {
   final String message;
 
-  const AuthError(this.message);
+  const AuthError({required this.message});
 
   @override
   List<Object?> get props => [message];
 }
 
-class Unauthenticated extends AuthState {}
+class AuthOTPSent extends AuthState {
+  final String message;
+  final String email;
+
+  const AuthOTPSent({
+    required this.message,
+    required this.email,
+  });
+
+  @override
+  List<Object?> get props => [message, email];
+}
+
+class AuthOTPVerified extends AuthState {
+  final String message;
+
+  const AuthOTPVerified({required this.message});
+
+  @override
+  List<Object?> get props => [message];
+}
 
 class PasswordResetSent extends AuthState {
   final String email;
