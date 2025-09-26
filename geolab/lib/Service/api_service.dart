@@ -226,6 +226,63 @@ class ApiService {
     }
   }
 
+  Future<List<PredictionModel>> getMyPredictions() async {
+    try {
+      final token = await _getToken();
+      if (token == null) {
+        throw Exception('Authentication required');
+      }
+
+      final response = await _dio.get(
+        '$baseUrl/predictions/me',
+        options: Options(
+          headers: {'Authorization': 'Bearer $token'},
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> predictions = response.data['predictions'];
+        return predictions
+            .map((json) => PredictionModel.fromJson(json))
+            .toList();
+      }
+
+      return [];
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
+  // Build absolute URL for uploaded files served by backend
+  String buildFileUrl(String relativePath) {
+    if (relativePath.startsWith('http')) return relativePath;
+    // backend serves at /api/uploads/<path>; our stored path often like 'uploads/xai/..'
+    final normalized = relativePath.replaceFirst(RegExp(r'^/+'), '');
+    final trimmed = normalized.startsWith('uploads/')
+        ? normalized.substring('uploads/'.length)
+        : normalized;
+    return '$baseUrl/uploads/$trimmed';
+  }
+
+  // Explain endpoint (Gen-AI lightweight)
+  Future<String> explainPrediction({
+    required String predictedClass,
+    required double confidence,
+    Map<String, dynamic>? probabilities,
+  }) async {
+    try {
+      await _dio.get(
+        '$baseUrl/model-info',
+      );
+      // Simple local explanation without calling LLM server-side
+      final conf = (confidence * 100).toStringAsFixed(1);
+      return 'Predicted $predictedClass with $conf% confidence. The model likely focused on texture and color patterns typical for this rock type.';
+    } catch (_) {
+      final conf = (confidence * 100).toStringAsFixed(1);
+      return 'Predicted $predictedClass with $conf% confidence.';
+    }
+  }
+
   // Feedback Methods
   Future<FeedbackModel> submitFeedback({
     required String predictionId,

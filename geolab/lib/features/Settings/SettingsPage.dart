@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:geolab/Service/subscription_service.dart';
+import 'package:geolab/features/Auth/Bloc/auth_bloc.dart';
+import 'package:geolab/features/Auth/Bloc/auth_state.dart';
+import 'package:geolab/models/subscription_model.dart';
 import 'package:geolab/config/theme_service.dart';
 import 'package:geolab/features/Settings/bloc/settings_bloc.dart';
 import 'package:geolab/features/Settings/bloc/settings_event.dart';
@@ -52,34 +56,117 @@ class SettingsPage extends StatelessWidget {
 
   Widget _buildProfileSection(
       BuildContext context, LocalizationService localizationService) {
+    final subscriptionService = SubscriptionService();
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            const CircleAvatar(
-              radius: 40,
-              child: Icon(HugeIcons.strokeRoundedUserQuestion01,
-                  size: 50, color: Colors.white),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              localizationService.translate('settings.profile.title'),
-              style: Theme.of(context).textTheme.headlineSmall,
-              textAlign: RTLUtils.startTextAlignment(context),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              localizationService.translate('settings.profile.subtitle'),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withOpacity(0.7),
+        child: BlocBuilder<AuthBloc, AuthState>(
+          builder: (context, authState) {
+            final isAuthed = authState is AuthAuthenticated;
+            final userEmail = isAuthed ? authState.user.email : '';
+            final fallbackTitle =
+                localizationService.translate('settings.profile.title');
+            final fallbackSubtitle =
+                localizationService.translate('settings.profile.subtitle');
+
+            return Column(
+              children: [
+                const CircleAvatar(
+                  radius: 40,
+                  child: Icon(HugeIcons.strokeRoundedUserQuestion01,
+                      size: 50, color: Colors.white),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  isAuthed && userEmail.isNotEmpty ? userEmail : fallbackTitle,
+                  style: Theme.of(context).textTheme.headlineSmall,
+                  textAlign: RTLUtils.startTextAlignment(context),
+                ),
+                const SizedBox(height: 8),
+                if (isAuthed)
+                  FutureBuilder<SubscriptionModel>(
+                    future: subscriptionService.getSubscriptionStatus(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Text(
+                          localizationService.translate('common.loading'),
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withOpacity(0.7),
+                              ),
+                          textAlign: TextAlign.center,
+                        );
+                      }
+                      if (!snapshot.hasData || snapshot.hasError) {
+                        return Text(
+                          fallbackSubtitle,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withOpacity(0.7),
+                              ),
+                          textAlign: TextAlign.center,
+                        );
+                      }
+                      final sub = snapshot.data!;
+                      final usage = '${sub.requestCount}/${sub.dailyLimit}';
+                      return Column(
+                        children: [
+                          Text(
+                            '${sub.subscriptionTier} • $usage',
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurface
+                                      .withOpacity(0.7),
+                                ),
+                            textAlign: TextAlign.center,
+                          ),
+                          if (sub.remainingRequests <= 1)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text(
+                                localizationService
+                                    .translate('subscription.almostOut'),
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.error,
+                                ),
+                              ),
+                            ),
+                        ],
+                      );
+                    },
+                  )
+                else
+                  Text(
+                    fallbackSubtitle,
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.copyWith(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withOpacity(0.7),
+                        ),
+                    textAlign: TextAlign.center,
                   ),
-              textAlign: TextAlign.center,
-            ),
-          ],
+              ],
+            );
+          },
         ),
       ),
     );

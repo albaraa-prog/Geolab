@@ -19,6 +19,7 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:geolab/Service/api_service.dart' as geolabApi;
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -377,6 +378,34 @@ class _HomePageState extends State<HomePage> {
                                 mobile: 20,
                                 tablet: 24,
                                 desktop: 28)),
+                        if (state.additionalData != null)
+                          Builder(builder: (context) {
+                            final data = state.additionalData!;
+                            final xai = data['xai_visualization'] as String?;
+                            final api = geolabApi.ApiService();
+                            final xaiUrl = xai != null ? api.buildFileUrl(xai) : null;
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                if (xaiUrl != null)
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.network(xaiUrl, height: 180, fit: BoxFit.cover),
+                                  ),
+                                const SizedBox(height: 12),
+                                FutureBuilder<String>(
+                                  future: api.explainPrediction(
+                                    predictedClass: state.rockType,
+                                    confidence: state.confidence,
+                                  ),
+                                  builder: (context, snap) {
+                                    final text = snap.data ?? context.t('rockClassification.generatingExplanation');
+                                    return Text(text, style: const TextStyle(color: Colors.black87));
+                                  },
+                                ),
+                              ],
+                            );
+                          }),
                         Align(
                           alignment: RTLUtils.endAlignment(context),
                           child: ElevatedButton(

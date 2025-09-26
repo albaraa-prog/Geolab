@@ -1,5 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:geolab/features/Auth/Bloc/auth_bloc.dart';
+import 'package:geolab/features/Auth/Bloc/auth_state.dart';
+import 'package:geolab/features/Auth/Bloc/auth_event.dart';
+import 'package:geolab/Service/subscription_service.dart';
+import 'package:geolab/models/subscription_model.dart';
 import 'package:geolab/features/Settings/SettingsPage.dart';
+import 'package:geolab/Service/api_service.dart';
+import 'package:geolab/models/prediction_model.dart';
 import 'package:geolab/utils/app_localizations.dart';
 import 'package:geolab/utils/rtl_wrapper.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -23,7 +31,8 @@ class MyDrawer extends StatelessWidget {
               TextButton(
                 onPressed: () async {
                   Navigator.pop(dialogContext);
-                  // TODO: Implement logout functionality
+                  // Dispatch logout
+                  context.read<AuthBloc>().add(AuthLogoutRequested());
                 },
                 child: Text(
                   context.t('auth.logout.title'),
@@ -84,63 +93,116 @@ class MyDrawer extends StatelessWidget {
         backgroundColor: const Color.fromARGB(255, 235, 235, 235),
         child: Column(
           children: [
-            UserAccountsDrawerHeader(
-              decoration: const BoxDecoration(color: Colors.black),
-              accountName: Text(
-                context.t('settings.profile.userName'),
-                style: const TextStyle(color: Colors.white),
-              ),
-              accountEmail: Text(
-                context.t('settings.profile.userEmail'),
-                style: const TextStyle(color: Colors.white70),
-              ),
-              currentAccountPicture: const CircleAvatar(
-                backgroundColor: Colors.grey,
-                child: Icon(HugeIcons.strokeRoundedUserQuestion01,
-                    color: Colors.white, size: 40),
-              ),
-              otherAccountsPictures: [
-                IconButton(
-                  icon: const Icon(HugeIcons.strokeRoundedAccountSetting01,
-                      color: Colors.white, size: 30),
-                  onPressed: () => _showBottomSheet(context),
-                ),
-              ],
+            BlocBuilder<AuthBloc, AuthState>(
+              builder: (context, authState) {
+
+                String displayName = context.t('settings.profile.userName');
+                String displayEmail = context.t('settings.profile.userEmail');
+                if (authState is AuthAuthenticated) {
+                  final email = authState.user.email;
+                  if (email.isNotEmpty) {
+                    displayEmail = email;
+                    final at = email.indexOf('@');
+                    displayName = at > 0 ? email.substring(0, at) : email;
+                  }
+                }
+
+                return UserAccountsDrawerHeader(
+                  decoration: const BoxDecoration(color: Colors.black),
+                  accountName: Text(
+                    displayName,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  accountEmail: Text(
+                    displayEmail,
+                    style: const TextStyle(color: Colors.white70),
+                  ),
+                  currentAccountPicture: const CircleAvatar(
+                    backgroundColor: Colors.grey,
+                    child: Icon(HugeIcons.strokeRoundedUserQuestion01,
+                        color: Colors.white, size: 40),
+                  ),
+                  otherAccountsPictures: [
+                    IconButton(
+                      icon: const Icon(HugeIcons.strokeRoundedAccountSetting01,
+                          color: Colors.white, size: 30),
+                      onPressed: () => _showBottomSheet(context),
+                    ),
+                  ],
+                );
+              },
             ),
+            // Dynamic usage summary card under header
             Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: context.t('navigation.searchHistory'),
-                  hintStyle: const TextStyle(color: Colors.grey),
-                  prefixIcon: const Icon(HugeIcons.strokeRoundedSearch01,
-                      color: Colors.black),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.0),
-                    borderSide: const BorderSide(color: Colors.black),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.0),
-                    borderSide: const BorderSide(color: Colors.black),
-                  ),
-                ),
-                onChanged: (value) {
-                  // Implement search functionality here
+              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+              child: FutureBuilder<SubscriptionModel>(
+                future: SubscriptionService().getSubscriptionStatus(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const SizedBox.shrink();
+                  }
+                  if (!snapshot.hasData) {
+                    return const SizedBox.shrink();
+                  }
+                  final sub = snapshot.data!;
+                  final used = sub.requestCount;
+                  final total = sub.dailyLimit;
+                  final pct = total > 0 ? (used / total).clamp(0.0, 1.0) : 0.0;
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('Usage', style: Theme.of(context).textTheme.bodyLarge),
+                            Text('${used}/${total}')
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: LinearProgressIndicator(value: pct),
+                        ),
+                      ],
+                    ),
+                  );
                 },
               ),
             ),
+            // History list from backend
             Expanded(
-              child: ListView.builder(
-                itemCount: 10, // Replace with actual history length
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    leading: const Icon(HugeIcons.strokeRoundedAbacus),
-                    title:
-                        Text('${context.t('navigation.historyItem')} $index'),
-                    subtitle: Text(
-                        '${context.t('navigation.historyPreview')} $index'),
-                    onTap: () {
-                      // Handle opening past conversation
+              child: FutureBuilder<List<PredictionModel>>(
+                future: ApiService().getMyPredictions(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  final items = snapshot.data ?? const <PredictionModel>[];
+                  if (items.isEmpty) {
+                    return Center(
+                      child: Text(
+                        context.t('navigation.historyEmpty'),
+                        style: const TextStyle(color: Colors.black54),
+                      ),
+                    );
+                  }
+                  return ListView.separated(
+                    itemCount: items.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final p = items[index];
+                      return ListTile(
+                        leading: const Icon(HugeIcons.strokeRoundedAbacus),
+                        title: Text(p.prediction),
+                        subtitle: Text('${p.confidencePercentage} • ${p.timestamp.toLocal()}'),
+                        onTap: () {},
+                      );
                     },
                   );
                 },
