@@ -20,7 +20,8 @@ class ProtectedRoute extends StatelessWidget {
       child: BlocBuilder<AuthBloc, AuthState>(
         builder: (context, state) {
           if (state is AuthLoading) {
-            return const Scaffold(
+            return child;
+            /*const Scaffold(
               body: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -31,7 +32,7 @@ class ProtectedRoute extends StatelessWidget {
                   ],
                 ),
               ),
-            );
+            );*/
           }
 
           if (state is AuthAuthenticated) {

@@ -38,7 +38,7 @@ final router = GoRouter(
   routes: [
     GoRoute(
       path: '/sign-in',
-      builder: (context, state) => const OTPTestPage(), //const SignInPage(),
+      builder: (context, state) => const HomePage(), //const SignInPage(),
     ),
     GoRoute(
       path: '/sign-up',
@@ -58,9 +58,7 @@ final router = GoRouter(
     ),
     GoRoute(
       path: '/',
-      builder: (context, state) => const ProtectedRoute(
-        child: HomePage(),
-      ),
+      builder: (context, state) => const HomePage(),
     ),
   ],
   errorBuilder: (context, state) => Scaffold(

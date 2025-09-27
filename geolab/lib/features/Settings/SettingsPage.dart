@@ -41,8 +41,6 @@ class SettingsPage extends StatelessWidget {
                     const SizedBox(height: 20),
                     _buildLanguageSection(context, localizationService, state),
                     const SizedBox(height: 20),
-                    _buildAppearanceSection(context, themeService),
-                    const SizedBox(height: 20),
                     _buildAboutSection(context, localizationService),
                   ],
                 );
@@ -307,69 +305,7 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildAppearanceSection(
-      BuildContext context, ThemeService themeService) {
-    return Card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: RTLUtils.padding(
-              left: 16,
-              right: 16,
-              context: context,
-            ),
-            child: Text(
-              context
-                  .read<LocalizationService>()
-                  .translate('settings.appearance.title'),
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-          ),
-          ListTile(
-            leading: Icon(
-              Icons.color_lens,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            title: Text(
-              context
-                  .read<LocalizationService>()
-                  .translate('settings.appearance.colors'),
-            ),
-            subtitle: Text(
-              context
-                  .read<LocalizationService>()
-                  .translate('settings.appearance.colorsDescription'),
-            ),
-            trailing: Icon(
-              RTLUtils.chevronIcon(context),
-            ),
-            onTap: () => _showColorPickerDialog(context, themeService),
-          ),
-          ListTile(
-            leading: Icon(
-              Icons.text_fields,
-              color: Theme.of(context).colorScheme.secondary,
-            ),
-            title: Text(
-              context
-                  .read<LocalizationService>()
-                  .translate('settings.appearance.typography'),
-            ),
-            subtitle: Text(
-              context
-                  .read<LocalizationService>()
-                  .translate('settings.appearance.typographyDescription'),
-            ),
-            trailing: Icon(
-              RTLUtils.chevronIcon(context),
-            ),
-            onTap: () => _showTypographyDialog(context, themeService),
-          ),
-        ],
-      ),
-    );
-  }
+  
 
   Widget _buildAboutSection(
       BuildContext context, LocalizationService localizationService) {
