@@ -10,6 +10,7 @@ import 'package:geolab/Service/api_service.dart';
 import 'package:geolab/models/prediction_model.dart';
 import 'package:geolab/utils/app_localizations.dart';
 import 'package:geolab/utils/rtl_wrapper.dart';
+import 'package:geolab/config/theme_service.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 class MyDrawer extends StatelessWidget {
@@ -88,9 +89,10 @@ class MyDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeService = ThemeService.instance;
     return RTLWrapper(
       child: Drawer(
-        backgroundColor: const Color.fromARGB(255, 235, 235, 235),
+        backgroundColor: themeService.surfaceColor,
         child: Column(
           children: [
             BlocBuilder<AuthBloc, AuthState>(
@@ -108,24 +110,24 @@ class MyDrawer extends StatelessWidget {
                 }
 
                 return UserAccountsDrawerHeader(
-                  decoration: const BoxDecoration(color: Colors.black),
+                  decoration: BoxDecoration(color: themeService.primaryColor),
                   accountName: Text(
                     displayName,
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: themeService.onPrimaryColor),
                   ),
                   accountEmail: Text(
                     displayEmail,
-                    style: const TextStyle(color: Colors.white70),
+                    style: TextStyle(color: themeService.onPrimaryColor.withOpacity(0.7)),
                   ),
-                  currentAccountPicture: const CircleAvatar(
-                    backgroundColor: Colors.grey,
+                  currentAccountPicture: CircleAvatar(
+                    backgroundColor: themeService.primaryColor.withOpacity(0.3),
                     child: Icon(HugeIcons.strokeRoundedUserQuestion01,
-                        color: Colors.white, size: 40),
+                        color: themeService.onPrimaryColor, size: 40),
                   ),
                   otherAccountsPictures: [
                     IconButton(
-                      icon: const Icon(HugeIcons.strokeRoundedAccountSetting01,
-                          color: Colors.white, size: 30),
+                      icon: Icon(HugeIcons.strokeRoundedAccountSetting01,
+                          color: themeService.onPrimaryColor, size: 30),
                       onPressed: () => _showBottomSheet(context),
                     ),
                   ],
@@ -150,7 +152,7 @@ class MyDrawer extends StatelessWidget {
                   final pct = total > 0 ? (used / total).clamp(0.0, 1.0) : 0.0;
                   return Container(
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: themeService.cardColor,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     padding: const EdgeInsets.all(12),
@@ -188,7 +190,7 @@ class MyDrawer extends StatelessWidget {
                     return Center(
                       child: Text(
                         context.t('navigation.historyEmpty'),
-                        style: const TextStyle(color: Colors.black54),
+                        style: TextStyle(color: themeService.textColor.withOpacity(0.6)),
                       ),
                     );
                   }

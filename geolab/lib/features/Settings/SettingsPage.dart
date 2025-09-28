@@ -9,6 +9,7 @@ import 'package:geolab/features/Settings/bloc/settings_bloc.dart';
 import 'package:geolab/features/Settings/bloc/settings_event.dart';
 import 'package:geolab/features/Settings/bloc/settings_state.dart';
 import 'package:geolab/features/Settings/components/localization.dart';
+import 'package:geolab/features/Settings/EditProfilePage.dart';
 import 'package:geolab/utils/custom_back_button.dart';
 import 'package:geolab/utils/rtl_wrapper.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -55,6 +56,7 @@ class SettingsPage extends StatelessWidget {
   Widget _buildProfileSection(
       BuildContext context, LocalizationService localizationService) {
     final subscriptionService = SubscriptionService();
+    final themeService = ThemeService.instance;
 
     return Card(
       child: Padding(
@@ -63,6 +65,7 @@ class SettingsPage extends StatelessWidget {
           builder: (context, authState) {
             final isAuthed = authState is AuthAuthenticated;
             final userEmail = isAuthed ? authState.user.email : '';
+            final userName = isAuthed ? authState.user.email.split('@')[0] : '';
             final fallbackTitle =
                 localizationService.translate('settings.profile.title');
             final fallbackSubtitle =
@@ -70,14 +73,51 @@ class SettingsPage extends StatelessWidget {
 
             return Column(
               children: [
-                const CircleAvatar(
-                  radius: 40,
-                  child: Icon(HugeIcons.strokeRoundedUserQuestion01,
-                      size: 50, color: Colors.white),
+                Stack(
+                  children: [
+                    CircleAvatar(
+                      radius: 40,
+                      backgroundColor: themeService.primaryColor.withOpacity(0.1),
+                      child: Icon(
+                        HugeIcons.strokeRoundedUserQuestion01,
+                        size: 50,
+                        color: themeService.primaryColor,
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: themeService.primaryColor,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: themeService.surfaceColor,
+                            width: 2,
+                          ),
+                        ),
+                        child: IconButton(
+                          icon: Icon(
+                            HugeIcons.strokeRoundedEdit01,
+                            color: themeService.onPrimaryColor,
+                            size: 16,
+                          ),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const EditProfilePage(),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  isAuthed && userEmail.isNotEmpty ? userEmail : fallbackTitle,
+                  userName.isNotEmpty ? userName : (isAuthed && userEmail.isNotEmpty ? userEmail : fallbackTitle),
                   style: Theme.of(context).textTheme.headlineSmall,
                   textAlign: RTLUtils.startTextAlignment(context),
                 ),
@@ -118,10 +158,36 @@ class SettingsPage extends StatelessWidget {
                       }
                       final sub = snapshot.data!;
                       final usage = '${sub.requestCount}/${sub.dailyLimit}';
+                      final remaining = sub.remainingRequests;
+                      final tier = sub.subscriptionTier.toUpperCase();
+                      
                       return Column(
                         children: [
+                          // Subscription Tier Badge
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: themeService.primaryColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: themeService.primaryColor.withOpacity(0.3),
+                                width: 1,
+                              ),
+                            ),
+                            child: Text(
+                              tier,
+                              style: TextStyle(
+                                color: themeService.primaryColor,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          
+                          // Usage Information
                           Text(
-                            '${sub.subscriptionTier} • $usage',
+                            '${localizationService.translate('subscription.usage')}: $usage',
                             style: Theme.of(context)
                                 .textTheme
                                 .bodyMedium
@@ -133,15 +199,63 @@ class SettingsPage extends StatelessWidget {
                                 ),
                             textAlign: TextAlign.center,
                           ),
-                          if (sub.remainingRequests <= 1)
+                          
+                          // Progress Bar
+                          const SizedBox(height: 8),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: LinearProgressIndicator(
+                              value: sub.dailyLimit > 0 ? (sub.requestCount / sub.dailyLimit).clamp(0.0, 1.0) : 0.0,
+                              backgroundColor: themeService.dividerColor,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                remaining <= 1 ? themeService.errorColor : themeService.primaryColor,
+                              ),
+                            ),
+                          ),
+                          
+                          // Warning or Success Message
+                          if (remaining <= 1)
                             Padding(
                               padding: const EdgeInsets.only(top: 8),
-                              child: Text(
-                                localizationService
-                                    .translate('subscription.almostOut'),
-                                style: TextStyle(
-                                  color: Theme.of(context).colorScheme.error,
-                                ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    HugeIcons.strokeRoundedAlert01,
+                                    color: themeService.errorColor,
+                                    size: 16,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    localizationService.translate('subscription.almostOut'),
+                                    style: TextStyle(
+                                      color: themeService.errorColor,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          else if (remaining <= 5)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    HugeIcons.strokeRoundedAlert01,
+                                    color: themeService.warningColor,
+                                    size: 16,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${localizationService.translate('subscription.remaining')}: $remaining',
+                                    style: TextStyle(
+                                      color: themeService.warningColor,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                         ],
@@ -211,6 +325,7 @@ class SettingsPage extends StatelessWidget {
             trailing: Switch(
               value: state.isDarkMode,
               onChanged: (value) {
+                // Update both the bloc and theme service
                 context.read<SettingsBloc>().add(
                       ThemeToggled(isDarkMode: value),
                     );
@@ -283,23 +398,6 @@ class SettingsPage extends StatelessWidget {
             ),
             onTap: () => _showLanguageDialog(context, localizationService),
           ),
-          if (localizationService.isRTL)
-            ListTile(
-              leading: Icon(
-                Icons.text_fields,
-                color: Theme.of(context).colorScheme.secondary,
-              ),
-              title: Text(
-                context
-                    .read<LocalizationService>()
-                    .translate('settings.language.rtl'),
-              ),
-              subtitle: Text(
-                context
-                    .read<LocalizationService>()
-                    .translate('settings.language.rtlDescription'),
-              ),
-            ),
         ],
       ),
     );
@@ -389,9 +487,24 @@ class SettingsPage extends StatelessWidget {
                   trailing: isCurrent
                       ? const Icon(Icons.check, color: Colors.green)
                       : null,
-                  onTap: () {
-                    localizationService.setLanguageCode(language['code']!);
-                    Navigator.of(context).pop();
+                  onTap: () async {
+                    // Show loading indicator
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (context) => const Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                    );
+                    
+                    // Change language
+                    await localizationService.setLanguageCode(language['code']!);
+                    
+                    // Close loading dialog and language dialog
+                    if (context.mounted) {
+                      Navigator.of(context).pop(); // Close loading
+                      Navigator.of(context).pop(); // Close language dialog
+                    }
                   },
                 );
               },
@@ -410,31 +523,6 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  void _showColorPickerDialog(BuildContext context, ThemeService themeService) {
-    // Placeholder for color picker dialog
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          context
-              .read<LocalizationService>()
-              .translate('settings.appearance.colorsComingSoon'),
-        ),
-      ),
-    );
-  }
-
-  void _showTypographyDialog(BuildContext context, ThemeService themeService) {
-    // Placeholder for typography dialog
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          context
-              .read<LocalizationService>()
-              .translate('settings.appearance.typographyComingSoon'),
-        ),
-      ),
-    );
-  }
 
   void _showLicenseDialog(BuildContext context) {
     showAboutDialog(

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolab/config/theme.dart';
 
 class ThemeService extends ChangeNotifier {
@@ -9,50 +8,43 @@ class ThemeService extends ChangeNotifier {
     return _instance!;
   }
 
-  late SharedPreferences _prefs;
   bool _isDarkMode = false;
-  bool _isInitialized = false;
+  bool _isInitialized = true;
+  bool _useSystemTheme = false;
 
   bool get isDarkMode => _isDarkMode;
   bool get isInitialized => _isInitialized;
   ThemeData get currentTheme => _isDarkMode ? AppTheme.darkTheme : AppTheme.lightTheme;
 
   ThemeService() {
-    _initializeTheme();
-  }
-
-  Future<void> _initializeTheme() async {
-    _prefs = await SharedPreferences.getInstance();
-    _isDarkMode = _prefs.getBool('isDarkMode') ?? false;
+    // Initialize with default values (no persistence)
     _isInitialized = true;
-    notifyListeners();
   }
 
   Future<void> toggleTheme() async {
     _isDarkMode = !_isDarkMode;
-    await _prefs.setBool('isDarkMode', _isDarkMode);
     notifyListeners();
   }
 
   Future<void> setTheme(bool isDarkMode) async {
     if (_isDarkMode == isDarkMode) return;
     _isDarkMode = isDarkMode;
-    await _prefs.setBool('isDarkMode', _isDarkMode);
     notifyListeners();
   }
 
   // Get theme mode for MaterialApp
   ThemeMode get themeMode {
     if (!_isInitialized) return ThemeMode.system;
+    if (useSystemTheme) return ThemeMode.system;
     return _isDarkMode ? ThemeMode.dark : ThemeMode.light;
   }
 
   // Check if system theme should be used
-  bool get useSystemTheme => _prefs.getBool('useSystemTheme') ?? false;
+  bool get useSystemTheme => _useSystemTheme;
 
   // Set system theme preference
   Future<void> setUseSystemTheme(bool useSystem) async {
-    await _prefs.setBool('useSystemTheme', useSystem);
+    _useSystemTheme = useSystem;
     notifyListeners();
   }
 
@@ -76,6 +68,27 @@ class ThemeService extends ChangeNotifier {
 
   // Get divider color based on current theme
   Color get dividerColor => _isDarkMode ? AppTheme.neutral700 : AppTheme.neutral200;
+
+  // Get on primary color based on current theme
+  Color get onPrimaryColor => _isDarkMode ? AppTheme.neutral900 : Colors.white;
+
+  // Get on surface color based on current theme
+  Color get onSurfaceColor => _isDarkMode ? AppTheme.neutral100 : AppTheme.neutral900;
+
+  // Get shadow color based on current theme
+  Color get shadowColor => _isDarkMode ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1);
+
+  // Get error color based on current theme
+  Color get errorColor => AppTheme.errorColor;
+
+  // Get warning color based on current theme
+  Color get warningColor => AppTheme.warningColor;
+
+  // Get success color based on current theme
+  Color get successColor => AppTheme.successColor;
+
+  // Get info color based on current theme
+  Color get infoColor => AppTheme.infoColor;
 
   // Get input decoration theme based on current theme
   InputDecorationThemeData get inputDecorationTheme {
@@ -138,5 +151,21 @@ class ThemeService extends ChangeNotifier {
     return _isDarkMode 
         ? AppTheme.darkTheme.dividerTheme 
         : AppTheme.lightTheme.dividerTheme;
+  }
+
+  // Handle system theme changes
+  void handleSystemThemeChange(Brightness systemBrightness) {
+    if (useSystemTheme) {
+      final shouldBeDark = systemBrightness == Brightness.dark;
+      if (_isDarkMode != shouldBeDark) {
+        _isDarkMode = shouldBeDark;
+        notifyListeners();
+      }
+    }
+  }
+
+  // Force theme refresh
+  void refreshTheme() {
+    notifyListeners();
   }
 }

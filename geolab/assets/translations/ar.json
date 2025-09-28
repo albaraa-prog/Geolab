@@ -106,7 +106,16 @@
       "title": "الملف الشخصي",
       "subtitle": "إدارة إعدادات حسابك وتفضيلاتك",
       "userName": "اسم المستخدم",
-      "userEmail": "user@example.com"
+      "userEmail": "user@example.com",
+      "edit": "تعديل الملف الشخصي",
+      "name": "الاسم الكامل",
+      "email": "عنوان البريد الإلكتروني",
+      "save": "حفظ التغييرات",
+      "updated": "تم تحديث الملف الشخصي بنجاح",
+      "nameRequired": "الاسم مطلوب",
+      "emailRequired": "البريد الإلكتروني مطلوب",
+      "invalidEmail": "يرجى إدخال عنوان بريد إلكتروني صحيح",
+      "photoComingSoon": "رفع الصور قريباً"
     },
     "theme": {
       "title": "المظهر",
@@ -138,6 +147,12 @@
       "license": "الترخيص",
       "licenseText": "هذا التطبيق مرخص تحت رخصة MIT."
     }
+  },
+  "subscription": {
+    "usage": "الاستخدام",
+    "remaining": "المتبقي",
+    "almostOut": "نفدت الطلبات تقريباً",
+    "tier": "نوع الاشتراك"
   },
   "rockClassification": {
     "title": "تصنيف الصخور",

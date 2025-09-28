@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:geolab/utils/theme.dart';
+import 'package:geolab/config/theme.dart';
 
 class TextInputField extends StatelessWidget {
   final TextEditingController controller;
@@ -44,18 +44,18 @@ class TextInputField extends StatelessWidget {
       decoration: InputDecoration(
         labelText: label,
         hintText: hintText,
-        prefixIcon: Icon(icon, color: AppTheme.primary),
+        prefixIcon: Icon(icon, color: AppTheme.primaryColor),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppTheme.divider),
+          borderSide: const BorderSide(color: AppTheme.neutral300),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppTheme.divider),
+          borderSide: const BorderSide(color: AppTheme.neutral300),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppTheme.primary, width: 2),
+          borderSide: const BorderSide(color: AppTheme.primaryColor, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -66,12 +66,12 @@ class TextInputField extends StatelessWidget {
           borderSide: const BorderSide(color: Colors.red, width: 2),
         ),
         filled: true,
-        fillColor: AppTheme.surface,
+        fillColor: Colors.white,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 12,
         ),
-        labelStyle: const TextStyle(color: AppTheme.primary),
+        labelStyle: const TextStyle(color: AppTheme.primaryColor),
       ),
     );
   }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:geolab/utils/theme.dart';
+import 'package:geolab/config/theme.dart';
 
 class OTPInputField extends StatefulWidget {
   final int length;
@@ -169,7 +169,7 @@ class OTPInputFieldState extends State<OTPInputField>
           color: widget.errorText != null
               ? Theme.of(context).colorScheme.error
               : _focusNodes[index].hasFocus
-                  ? AppTheme.primary
+                  ? AppTheme.primaryColor
                   : Colors.grey.shade300,
           width: _focusNodes[index].hasFocus ? 2 : 1,
         ),
@@ -192,7 +192,7 @@ class OTPInputFieldState extends State<OTPInputField>
             fontSize: 20,
             fontWeight: FontWeight.bold,
             color: widget.enabled 
-                ? AppTheme.primary 
+                ? AppTheme.primaryColor 
                 : Colors.grey.shade400,
           ),
           inputFormatters: [

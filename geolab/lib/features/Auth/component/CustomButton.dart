@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:geolab/utils/theme.dart';
+import 'package:geolab/config/theme.dart';
 
 class CustomButton extends StatelessWidget {
   final VoidCallback? onPressed;
@@ -29,8 +29,8 @@ class CustomButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: backgroundColor ?? AppTheme.primary,
-          foregroundColor: textColor ?? AppTheme.onPrimary,
+          backgroundColor: backgroundColor ?? AppTheme.primaryColor,
+          foregroundColor: textColor ?? Colors.white,
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           shape: RoundedRectangleBorder(
@@ -43,7 +43,7 @@ class CustomButton extends StatelessWidget {
                 height: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(AppTheme.onPrimary),
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
               )
             : Text(

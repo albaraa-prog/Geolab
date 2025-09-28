@@ -106,7 +106,16 @@
       "title": "Profile",
       "subtitle": "Manage your account settings and preferences",
       "userName": "User Name",
-      "userEmail": "user@example.com"
+      "userEmail": "user@example.com",
+      "edit": "Edit Profile",
+      "name": "Full Name",
+      "email": "Email Address",
+      "save": "Save Changes",
+      "updated": "Profile updated successfully",
+      "nameRequired": "Name is required",
+      "emailRequired": "Email is required",
+      "invalidEmail": "Please enter a valid email address",
+      "photoComingSoon": "Photo upload coming soon"
     },
     "theme": {
       "title": "Theme",
@@ -138,6 +147,12 @@
       "license": "License",
       "licenseText": "This app is licensed under the MIT License."
     }
+  },
+  "subscription": {
+    "usage": "Usage",
+    "remaining": "Remaining",
+    "almostOut": "Almost out of requests",
+    "tier": "Subscription Tier"
   },
   "rockClassification": {
     "title": "Rock Classification",

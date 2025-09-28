@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolab/features/RockClassification/Bloc/rock_classification_bloc.dart';
 import 'package:geolab/features/RockClassification/Bloc/rock_classification_event.dart';
 import 'package:geolab/features/RockClassification/Bloc/rock_classification_state.dart';
+import 'package:geolab/config/theme_service.dart';
 
 class RockClassificationPage extends StatelessWidget {
   const RockClassificationPage({super.key});
@@ -22,11 +23,12 @@ class RockClassificationView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeService = ThemeService.instance;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Rock Classification'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
+        backgroundColor: themeService.primaryColor,
+        foregroundColor: themeService.onPrimaryColor,
       ),
       body: BlocBuilder<RockClassificationBloc, RockClassificationState>(
         builder: (context, state) {
@@ -132,9 +134,10 @@ class RockClassificationView extends StatelessWidget {
 
   Widget _buildBottomControls(
       BuildContext context, RockClassificationState state) {
+    final themeService = ThemeService.instance;
     return Container(
       padding: const EdgeInsets.all(16),
-      color: Colors.white,
+      color: themeService.surfaceColor,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
@@ -150,8 +153,8 @@ class RockClassificationView extends StatelessWidget {
               icon: const Icon(Icons.refresh),
               label: const Text('New Photo'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
+                backgroundColor: themeService.primaryColor,
+                foregroundColor: themeService.onPrimaryColor,
               ),
             )
           else if (state is CameraInitialized) ...[
@@ -164,8 +167,8 @@ class RockClassificationView extends StatelessWidget {
               icon: const Icon(Icons.photo_library),
               label: const Text('Gallery'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
+                backgroundColor: themeService.primaryColor,
+                foregroundColor: themeService.onPrimaryColor,
               ),
             ),
             ElevatedButton.icon(
@@ -175,8 +178,8 @@ class RockClassificationView extends StatelessWidget {
               icon: const Icon(Icons.camera_alt),
               label: const Text('Capture'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
+                backgroundColor: themeService.primaryColor,
+                foregroundColor: themeService.onPrimaryColor,
               ),
             ),
           ],

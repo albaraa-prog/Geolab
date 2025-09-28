@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolab/config/localization_config.dart';
 
 class LocalizationService extends ChangeNotifier {
@@ -14,7 +13,6 @@ class LocalizationService extends ChangeNotifier {
   Locale _currentLocale = LocalizationConfig.defaultLocale;
   Map<String, dynamic> _translations = {};
   bool _isInitialized = false;
-  late SharedPreferences _prefs;
 
   Locale get currentLocale => _currentLocale;
   Map<String, dynamic> get translations => _translations;
@@ -27,18 +25,8 @@ class LocalizationService extends ChangeNotifier {
   }
 
   Future<void> _initializeService() async {
-    _prefs = await SharedPreferences.getInstance();
-    final savedLanguageCode = _prefs.getString('languageCode') ?? 'en';
-    final savedCountryCode = _prefs.getString('countryCode');
-    
-    if (savedCountryCode != null) {
-      _currentLocale = Locale(savedLanguageCode, savedCountryCode);
-    } else {
-      _currentLocale = Locale(savedLanguageCode);
-    }
-
-    // Ensure the locale is supported
-    _currentLocale = LocalizationConfig.getFallbackLocale(_currentLocale);
+    // Use default locale (no persistence)
+    _currentLocale = LocalizationConfig.defaultLocale;
     
     await _loadTranslations();
   }
@@ -77,17 +65,11 @@ class LocalizationService extends ChangeNotifier {
     final supportedLocale = LocalizationConfig.getFallbackLocale(locale);
     
     _currentLocale = supportedLocale;
-    _isInitialized = false;
     
-    // Save to preferences
-    await _prefs.setString('languageCode', supportedLocale.languageCode);
-    if (supportedLocale.countryCode != null) {
-      await _prefs.setString('countryCode', supportedLocale.countryCode!);
-    } else {
-      await _prefs.remove('countryCode');
-    }
-    
+    // Notify listeners immediately for UI update
     notifyListeners();
+    
+    // Load translations in background
     await _loadTranslations();
   }
 
@@ -97,8 +79,8 @@ class LocalizationService extends ChangeNotifier {
   }
 
   String translate(String key) {
-    if (!_isInitialized) {
-      // Return a simple fallback while translations are loading
+    // If translations are not initialized, try to use cached translations or return key
+    if (!_isInitialized && _translations.isEmpty) {
       return key.split('.').last;
     }
 
@@ -111,7 +93,7 @@ class LocalizationService extends ChangeNotifier {
       } else {
         // If not found, return the key itself
         print('Translation key not found: $key');
-        return key;
+        return key.split('.').last;
       }
     }
 
@@ -186,11 +168,11 @@ class LocalizationService extends ChangeNotifier {
   // Get plural translation
   String translatePlural(String key, int count) {
     if (count == 0) {
-      return translate('$key.zero') ?? translate(key);
+      return translate('$key.zero');
     } else if (count == 1) {
-      return translate('$key.one') ?? translate(key);
+      return translate('$key.one');
     } else {
-      return translate('$key.many') ?? translate(key);
+      return translate('$key.many');
     }
   }
 

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 class AppTheme {
   // Primary Colors
-  static const Color primaryColor = Color(0xFF1976D2);
-  static const Color primaryLightColor = Color(0xFF42A5F5);
-  static const Color primaryDarkColor = Color(0xFF1565C0);
+  static const Color primaryColor = Color(0xFF795548); // Brown 600
+  static const Color primaryLightColor = Color(0xFFA98274); // Brown 400
+  static const Color primaryDarkColor = Color(0xFF4B2C20); // Brown 800
   
   // Secondary Colors
   static const Color secondaryColor = Color(0xFF26A69A);
@@ -52,12 +52,12 @@ class AppTheme {
         onError: Colors.white,
       ),
       appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.white,
-        foregroundColor: neutral900,
+        backgroundColor: primaryColor,
+        foregroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
         titleTextStyle: TextStyle(
-          color: neutral900,
+          color: Colors.white,
           fontSize: 20,
           fontWeight: FontWeight.w600,
         ),
@@ -234,12 +234,12 @@ class AppTheme {
         onError: Colors.white,
       ),
       appBarTheme: const AppBarTheme(
-        backgroundColor: neutral800,
-        foregroundColor: neutral100,
+        backgroundColor: primaryColor,
+        foregroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
         titleTextStyle: TextStyle(
-          color: neutral100,
+          color: Colors.white,
           fontSize: 20,
           fontWeight: FontWeight.w600,
         ),

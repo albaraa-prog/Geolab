@@ -12,10 +12,9 @@ import 'package:geolab/utils/alerts.dart';
 import 'package:geolab/utils/app_localizations.dart';
 import 'package:geolab/utils/responsive_layout.dart';
 import 'package:geolab/utils/rtl_wrapper.dart';
-import 'package:geolab/utils/theme.dart';
+import 'package:geolab/config/theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:flutter/foundation.dart';
 
 
 class SignUpPage extends StatefulWidget {
@@ -39,7 +38,6 @@ String? _otpError;
   
   bool _isLoading = false;
   bool _showOTPStep = false;
-  bool _isResendingOTP = false;
   int _resendTimer = 0;
   
   // Store user data for OTP verification step
@@ -80,7 +78,7 @@ String? _otpError;
         AppAlerts.showSnackbar(
           context,
           context.t('auth.error.passwordsDoNotMatch'),
-          color: Colors.red,
+          color: AppTheme.errorColor,
         );
         return;
       }
@@ -149,8 +147,8 @@ String? _otpError;
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              AppTheme.primary,
-              AppTheme.primary.withOpacity(0.8),
+              AppTheme.primaryColor,
+              AppTheme.primaryColor.withOpacity(0.8),
             ],
           ),
         ),
@@ -237,7 +235,7 @@ String? _otpError;
             fontSize: ResponsiveLayout.getResponsiveFontSize(
                 context, mobile: 24, tablet: 26, desktop: 28),
             fontWeight: FontWeight.bold,
-            color: AppTheme.primary,
+            color: AppTheme.primaryColor,
           ),
           textAlign: TextAlign.center,
         ),
@@ -302,7 +300,7 @@ String? _otpError;
               AppAlerts.showSnackbar(
                 context,
                 context.t('auth.otp.sent'),
-                color: Colors.green,
+                color: AppTheme.successColor,
               );
             } else if (state is AuthAuthenticated) {
               context.go('/');
@@ -330,7 +328,7 @@ String? _otpError;
               style: TextStyle(
                 fontSize: ResponsiveLayout.getResponsiveFontSize(
                     context, mobile: 14, tablet: 16, desktop: 18),
-                color: Colors.grey[600],
+                color: AppTheme.neutral600,
               ),
             ),
             TextButton(
@@ -338,7 +336,7 @@ String? _otpError;
               child: Text(
                 context.t('auth.signIn.button'),
                 style: TextStyle(
-                  color: AppTheme.primary,
+                  color: AppTheme.primaryColor,
                   fontWeight: FontWeight.w600,
                   fontSize: ResponsiveLayout.getResponsiveFontSize(
                       context, mobile: 14, tablet: 16, desktop: 18),
@@ -367,7 +365,7 @@ String? _otpError;
           child: IconButton(
             onPressed: _goBackToSignUp,
             icon: const Icon(HugeIcons.strokeRoundedArrowLeft01),
-            color: AppTheme.primary,
+            color: AppTheme.primaryColor,
           ),
         ),
         const SizedBox(height: 8),
@@ -375,7 +373,7 @@ String? _otpError;
           HugeIcons.strokeRoundedMail01,
           size: ResponsiveLayout.getResponsiveIconSize(context,
               mobile: 60, tablet: 70, desktop: 80),
-          color: AppTheme.primary,
+          color: AppTheme.primaryColor,
         ),
         SizedBox(
             height: ResponsiveLayout.getResponsiveSpacing(
@@ -392,7 +390,7 @@ String? _otpError;
                 tablet: 26,
                 desktop: 28),
             fontWeight: FontWeight.bold,
-            color: AppTheme.primary,
+            color: AppTheme.primaryColor,
           ),
           textAlign: TextAlign.center,
         ),
@@ -410,7 +408,7 @@ String? _otpError;
                 mobile: 14,
                 tablet: 16,
                 desktop: 18),
-            color: Colors.grey[600],
+            color: AppTheme.neutral600,
           ),
           textAlign: TextAlign.center,
         ),
@@ -458,13 +456,13 @@ String? _otpError;
               AppAlerts.showSnackbar(
                 context,
                 context.t('auth.otp.resent'),
-                color: Colors.green,
+                color: AppTheme.successColor,
               );
             } else if (state is AuthAuthenticated) {
               AppAlerts.showSnackbar(
                 context,
                 context.t('auth.signUp.success'),
-                color: Colors.green,
+                color: AppTheme.successColor,
               );
               context.go('/');
             }
@@ -507,7 +505,7 @@ String? _otpError;
                     mobile: 14,
                     tablet: 16,
                     desktop: 18),
-                color: Colors.grey[600],
+                color: AppTheme.neutral600,
               ),
             ),
             TextButton(
@@ -517,7 +515,7 @@ String? _otpError;
                     ? '${context.t('auth.otp.resend')} (${_resendTimer}s)'
                     : context.t('auth.otp.resend'),
                 style: TextStyle(
-                  color: _resendTimer > 0 ? Colors.grey : AppTheme.primary,
+                  color: _resendTimer > 0 ? AppTheme.neutral500 : AppTheme.primaryColor,
                   fontWeight: FontWeight.w600,
                   fontSize: ResponsiveLayout.getResponsiveFontSize(
                       context,
@@ -553,8 +551,8 @@ String? _otpError;
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    AppTheme.primary,
-                    AppTheme.primary.withOpacity(0.8),
+                    AppTheme.primaryColor,
+                    AppTheme.primaryColor.withOpacity(0.8),
                   ],
                 ),
               ),
@@ -618,10 +616,10 @@ String? _otpError;
         children: [
           Text(
             context.t('auth.signUp.title'),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.bold,
-              color: AppTheme.primary,
+              color: AppTheme.primaryColor,
             ),
             textAlign: TextAlign.center,
           ),
@@ -676,7 +674,7 @@ String? _otpError;
                 AppAlerts.showSnackbar(
                   context,
                   context.t('auth.otp.sent'),
-                  color: Colors.green,
+                  color: AppTheme.successColor,
                 );
               } else if (state is AuthAuthenticated) {
                 context.go('/');
@@ -701,15 +699,15 @@ String? _otpError;
                 context.t('auth.hasAccount'),
                 style: TextStyle(
                   fontSize: 16,
-                  color: Colors.grey[600],
+                  color: AppTheme.neutral600,
                 ),
               ),
               TextButton(
                 onPressed: () => context.go('/sign-in'),
                 child: Text(
                   context.t('auth.signIn.button'),
-                  style: const TextStyle(
-                    color: AppTheme.primary,
+                  style: TextStyle(
+                    color: AppTheme.primaryColor,
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
                   ),
@@ -734,22 +732,22 @@ Widget _buildDesktopOTPForm() {
           child: IconButton(
             onPressed: _goBackToSignUp,
             icon: const Icon(HugeIcons.strokeRoundedArrowLeft01),
-            color: AppTheme.primary,
+            color: AppTheme.primaryColor,
           ),
         ),
         const SizedBox(height: 8),
         const Icon(
           HugeIcons.strokeRoundedMail01,
           size: 80,
-          color: AppTheme.primary,
+          color: AppTheme.primaryColor,
         ),
         const SizedBox(height: 24),
         Text(
           context.t('auth.otp.title'),
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.bold,
-            color: AppTheme.primary,
+            color: AppTheme.primaryColor,
           ),
           textAlign: TextAlign.center,
         ),
@@ -758,7 +756,7 @@ Widget _buildDesktopOTPForm() {
           context.t('auth.otp.description', {'email': _pendingEmail}),
           style: TextStyle(
             fontSize: 16,
-            color: Colors.grey[600],
+            color: AppTheme.neutral600,
           ),
           textAlign: TextAlign.center,
         ),
@@ -796,13 +794,13 @@ Widget _buildDesktopOTPForm() {
               AppAlerts.showSnackbar(
                 context,
                 context.t('auth.otp.resent'),
-                color: Colors.green,
+                color: AppTheme.successColor,
               );
             } else if (state is AuthAuthenticated) {
               AppAlerts.showSnackbar(
                 context,
                 context.t('auth.signUp.success'),
-                color: Colors.green,
+                color: AppTheme.successColor,
               );
               context.go('/');
             }
@@ -836,7 +834,7 @@ Widget _buildDesktopOTPForm() {
               context.t('auth.otp.didntReceive'),
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.grey[600],
+                color: AppTheme.neutral600,
               ),
             ),
             TextButton(
@@ -846,7 +844,7 @@ Widget _buildDesktopOTPForm() {
                     ? '${context.t('auth.otp.resend')} (${_resendTimer}s)'
                     : context.t('auth.otp.resend'),
                 style: TextStyle(
-                  color: _resendTimer > 0 ? Colors.grey : AppTheme.primary,
+                  color: _resendTimer > 0 ? AppTheme.neutral500 : AppTheme.primaryColor,
                   fontWeight: FontWeight.w600,
                   fontSize: 16,
                 ),

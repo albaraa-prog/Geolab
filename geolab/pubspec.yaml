@@ -55,6 +55,8 @@ dependencies:
 
   # UI components
   hugeicons: ^0.0.11
+  lottie: ^3.1.2
+  flutter_animate: ^4.5.0
 
   # Local storage
   shared_preferences: ^2.2.2
@@ -120,6 +122,7 @@ flutter:
     - assets/icons/
     - assets/translations/
     - assets/images/
+    - assets/animations/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

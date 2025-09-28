@@ -10,7 +10,7 @@ import 'package:geolab/utils/alerts.dart';
 import 'package:geolab/utils/app_localizations.dart';
 import 'package:geolab/utils/responsive_layout.dart';
 import 'package:geolab/utils/rtl_wrapper.dart';
-import 'package:geolab/utils/theme.dart';
+import 'package:geolab/config/theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 
@@ -59,7 +59,7 @@ class _SignInPageState extends State<SignInPage> {
           title: Text(
             context.t('auth.resetPassword.title'),
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: AppTheme.primary,
+                  color: AppTheme.primaryColor,
                 ),
           ),
           content: Column(
@@ -80,7 +80,7 @@ class _SignInPageState extends State<SignInPage> {
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide:
-                        const BorderSide(color: AppTheme.primary, width: 2),
+                        BorderSide(color: AppTheme.primaryColor, width: 2),
                   ),
                 ),
                 keyboardType: TextInputType.emailAddress,
@@ -92,8 +92,8 @@ class _SignInPageState extends State<SignInPage> {
               onPressed: () => Navigator.pop(context),
               child: Text(
                 context.t('auth.resetPassword.cancel'),
-                style: const TextStyle(
-                  color: AppTheme.primary,
+                style: TextStyle(
+                  color: AppTheme.primaryColor,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -105,8 +105,8 @@ class _SignInPageState extends State<SignInPage> {
               },
               child: Text(
                 context.t('auth.resetPassword.send'),
-                style: const TextStyle(
-                  color: AppTheme.primary,
+                style: TextStyle(
+                  color: AppTheme.primaryColor,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -138,8 +138,8 @@ class _SignInPageState extends State<SignInPage> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              AppTheme.primary,
-              AppTheme.primary.withOpacity(0.8),
+              AppTheme.primaryColor,
+              AppTheme.primaryColor.withOpacity(0.8),
             ],
           ),
         ),
@@ -151,12 +151,36 @@ class _SignInPageState extends State<SignInPage> {
                 SizedBox(
                     height: ResponsiveLayout.getResponsiveSpacing(context,
                         mobile: 40, tablet: 60, desktop: 80)),
-                // Logo or App Title
-                Icon(
-                  HugeIcons.strokeRoundedGem,
-                  size: ResponsiveLayout.getResponsiveIconSize(context,
-                      mobile: 80, tablet: 100, desktop: 120),
-                  color: Colors.white,
+                // Logo or App Title with Animation
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // Background glow effect
+                    Container(
+                      width: ResponsiveLayout.getResponsiveIconSize(context,
+                          mobile: 120, tablet: 140, desktop: 160),
+                      height: ResponsiveLayout.getResponsiveIconSize(context,
+                          mobile: 120, tablet: 140, desktop: 160),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withOpacity(0.1),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.white.withOpacity(0.3),
+                            blurRadius: 20,
+                            spreadRadius: 5,
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Main icon
+                    Icon(
+                      HugeIcons.strokeRoundedGem,
+                      size: ResponsiveLayout.getResponsiveIconSize(context,
+                          mobile: 80, tablet: 100, desktop: 120),
+                      color: Colors.white,
+                    ),
+                  ],
                 ),
                 SizedBox(
                     height: ResponsiveLayout.getResponsiveSpacing(context,
@@ -213,7 +237,7 @@ class _SignInPageState extends State<SignInPage> {
                                 tablet: 26,
                                 desktop: 28),
                             fontWeight: FontWeight.bold,
-                            color: AppTheme.primary,
+                            color: AppTheme.primaryColor,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -256,7 +280,7 @@ class _SignInPageState extends State<SignInPage> {
                             child: Text(
                               context.t('auth.forgotPassword'),
                               style: TextStyle(
-                                color: AppTheme.primary,
+                                color: AppTheme.primaryColor,
                                 fontSize:
                                     ResponsiveLayout.getResponsiveFontSize(
                                         context,
@@ -311,7 +335,7 @@ class _SignInPageState extends State<SignInPage> {
                                         mobile: 14,
                                         tablet: 16,
                                         desktop: 18),
-                                color: Colors.grey[600],
+                                color: AppTheme.neutral600,
                               ),
                             ),
                             TextButton(
@@ -319,7 +343,7 @@ class _SignInPageState extends State<SignInPage> {
                               child: Text(
                                 context.t('auth.signUp.button'),
                                 style: TextStyle(
-                                  color: AppTheme.primary,
+                                  color: AppTheme.primaryColor,
                                   fontWeight: FontWeight.w600,
                                   fontSize:
                                       ResponsiveLayout.getResponsiveFontSize(
@@ -366,8 +390,8 @@ class _SignInPageState extends State<SignInPage> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    AppTheme.primary,
-                    AppTheme.primary.withOpacity(0.8),
+                    AppTheme.primaryColor,
+                    AppTheme.primaryColor.withOpacity(0.8),
                   ],
                 ),
               ),
@@ -421,7 +445,7 @@ class _SignInPageState extends State<SignInPage> {
                           style: const TextStyle(
                             fontSize: 32,
                             fontWeight: FontWeight.bold,
-                            color: AppTheme.primary,
+                            color: AppTheme.primaryColor,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -449,7 +473,7 @@ class _SignInPageState extends State<SignInPage> {
                             child: Text(
                               context.t('auth.forgotPassword'),
                               style: const TextStyle(
-                                color: AppTheme.primary,
+                                color: AppTheme.primaryColor,
                                 fontSize: 16,
                               ),
                             ),
@@ -484,7 +508,7 @@ class _SignInPageState extends State<SignInPage> {
                               context.t('auth.noAccount'),
                               style: TextStyle(
                                 fontSize: 16,
-                                color: Colors.grey[600],
+                                color: AppTheme.neutral600,
                               ),
                             ),
                             TextButton(
@@ -492,7 +516,7 @@ class _SignInPageState extends State<SignInPage> {
                               child: Text(
                                 context.t('auth.signUp.button'),
                                 style: const TextStyle(
-                                  color: AppTheme.primary,
+                                  color: AppTheme.primaryColor,
                                   fontWeight: FontWeight.w600,
                                   fontSize: 16,
                                 ),

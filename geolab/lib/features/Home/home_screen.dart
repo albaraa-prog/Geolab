@@ -362,7 +362,7 @@ class _HomePageState extends State<HomePage> {
       child: Scaffold(
         key: _scaffoldKey,
         drawer: const MyDrawer(),
-        backgroundColor: _themeService.isDarkMode ? Colors.black : Colors.grey.shade900,
+        backgroundColor: _themeService.backgroundColor,
         body: ResponsiveBuilder(
           mobile: _buildMobileLayout(),
           tablet: _buildTabletLayout(),
@@ -424,7 +424,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildLoadingView() {
     return Container(
-      color: _themeService.isDarkMode ? Colors.black : Colors.grey.shade900,
+      color: _themeService.backgroundColor,
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -438,8 +438,8 @@ class _HomePageState extends State<HomePage> {
                   ? 'Switching camera...'
                   : context.t('common.loading'),
               style: TextStyle(
-                fontSize: 16,
                 color: _themeService.textColor,
+                fontSize: 16,
               ),
             ),
           ],
@@ -480,23 +480,21 @@ class _HomePageState extends State<HomePage> {
     return Container(
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: _themeService.isDarkMode 
-            ? Colors.black.withOpacity(0.3) 
-            : Colors.white.withOpacity(0.2),
+        color: _themeService.surfaceColor.withOpacity(0.2),
       ),
-      child: IconButton(
-        icon: Icon(
-          HugeIcons.strokeRoundedSidebarRight01,
-          color: Colors.white,
-          size: ResponsiveLayout.getResponsiveIconSize(
-            context,
-            mobile: 24,
-            tablet: 28,
-            desktop: 32,
+        child: IconButton(
+          icon: Icon(
+            HugeIcons.strokeRoundedSidebarRight01,
+            color: _themeService.onSurfaceColor,
+            size: ResponsiveLayout.getResponsiveIconSize(
+              context,
+              mobile: 24,
+              tablet: 28,
+              desktop: 32,
+            ),
           ),
+          onPressed: () => _scaffoldKey.currentState!.openDrawer(),
         ),
-        onPressed: () => _scaffoldKey.currentState!.openDrawer(),
-      ),
     );
   }
 
@@ -504,25 +502,21 @@ class _HomePageState extends State<HomePage> {
     return Container(
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: _themeService.isDarkMode 
-            ? Colors.black.withOpacity(0.3) 
-            : Colors.white.withOpacity(0.2),
+        color: _themeService.surfaceColor.withOpacity(0.2),
       ),
-      child: IconButton(
-        icon: Icon(
-          _isFlashOn
-              ? HugeIcons.strokeRoundedFlash
-              : HugeIcons.strokeRoundedFlashOff,
-          color: _isFlashOn ? Colors.yellow : Colors.white,
-          size: ResponsiveLayout.getResponsiveIconSize(
-            context,
-            mobile: 20,
-            tablet: 24,
-            desktop: 28,
+        child: IconButton(
+          icon: Icon(
+            _isFlashOn ? HugeIcons.strokeRoundedFlash : HugeIcons.strokeRoundedFlashOff,
+            color: _isFlashOn ? Colors.yellow : _themeService.onSurfaceColor,
+            size: ResponsiveLayout.getResponsiveIconSize(
+              context,
+              mobile: 20,
+              tablet: 24,
+              desktop: 28,
+            ),
           ),
+          onPressed: _toggleFlash,
         ),
-        onPressed: _toggleFlash,
-      ),
     );
   }
 
@@ -534,7 +528,7 @@ class _HomePageState extends State<HomePage> {
           height: ResponsiveLayout.isWeb(context) ? 400 : 350,
           decoration: BoxDecoration(
             border: Border.all(
-              color: _themeService.primaryColor.withOpacity(0.8),
+              color: _themeService.primaryColor,
               width: 2,
             ),
             borderRadius: BorderRadius.circular(20),
@@ -614,19 +608,19 @@ class _HomePageState extends State<HomePage> {
         children: [
           TextButton.icon(
             onPressed: _clearCapturedImage,
-            icon: const Icon(Icons.delete_outline, color: Colors.white),
+            icon: Icon(Icons.delete_outline, color: _themeService.onSurfaceColor),
             label: Text(
               context.t('camera.remove'),
-              style: const TextStyle(color: Colors.white, fontSize: 16),
+              style: TextStyle(color: _themeService.onSurfaceColor, fontSize: 16),
             ),
           ),
           const SizedBox(width: 24),
           TextButton.icon(
             onPressed: _saveCapturedImage,
-            icon: const Icon(Icons.save_alt, color: Colors.white),
+            icon: Icon(Icons.save_alt, color: _themeService.onSurfaceColor),
             label: Text(
               context.t('camera.save'),
-              style: const TextStyle(color: Colors.white, fontSize: 16),
+              style: TextStyle(color: _themeService.onSurfaceColor, fontSize: 16),
             ),
           ),
         ],
@@ -665,27 +659,27 @@ class _HomePageState extends State<HomePage> {
         height: 70,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          border: Border.all(color: Colors.white, width: 3),
+          border: Border.all(color: _themeService.onSurfaceColor, width: 3),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
+              color: _themeService.shadowColor,
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
           ],
         ),
         child: _isTakingPicture
-            ? const Padding(
-                padding: EdgeInsets.all(12),
+            ? Padding(
+                padding: const EdgeInsets.all(12),
                 child: CircularProgressIndicator(
-                  color: Colors.white,
+                  color: _themeService.onSurfaceColor,
                   strokeWidth: 3,
                 ),
               )
             : Container(
                 margin: const EdgeInsets.all(3),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
+                decoration: BoxDecoration(
+                  color: _themeService.onSurfaceColor,
                   shape: BoxShape.circle,
                 ),
               ),
@@ -808,7 +802,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   child: Text(
                     context.t('common.close'),
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: _themeService.onSurfaceColor),
                   ),
                 ),
               ),
@@ -852,7 +846,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 child: Text(
                   context.t('common.close'),
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: _themeService.onSurfaceColor),
                 ),
               ),
             ],
