@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:geolab/config/theme_service.dart';
+import 'package:geolab/Service/theme_service.dart';
 import 'package:geolab/features/Settings/components/localization.dart';
 import 'package:provider/provider.dart';
 

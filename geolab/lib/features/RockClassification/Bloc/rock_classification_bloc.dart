@@ -121,6 +121,12 @@ class RockClassificationBloc
         print('Warning: Could not verify subscription status: $e');
       }
 
+      // Validate image file exists and is readable
+      if (!await event.image.exists()) {
+        emit(const ClassificationError('Image file not found'));
+        return;
+      }
+
       final result = await _classificationService.classifyRock(event.image);
       emit(ClassificationComplete(
         rockType: result.rockType,
@@ -129,7 +135,8 @@ class RockClassificationBloc
         additionalData: result.additionalData,
       ));
     } catch (e) {
-      emit(ClassificationError('Classification error: $e'));
+      print('Classification error: $e');
+      emit(ClassificationError('Classification error: ${e.toString()}'));
     }
   }
 

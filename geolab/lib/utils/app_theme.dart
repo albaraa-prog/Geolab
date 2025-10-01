@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:geolab/config/theme.dart';
-import 'package:geolab/config/theme_service.dart';
+import 'package:geolab/Service/theme_service.dart';
 
 /// Utility class for easy theme access throughout the app
 class AppThemeUtils {
@@ -69,7 +69,6 @@ class AppThemeUtils {
   /// Set theme
   static Future<void> setTheme(bool isDarkMode) => _service.setTheme(isDarkMode);
 
-  /// Set system theme preference
   static Future<void> setUseSystemTheme(bool useSystem) => _service.setUseSystemTheme(useSystem);
 
   /// Check if system theme should be used

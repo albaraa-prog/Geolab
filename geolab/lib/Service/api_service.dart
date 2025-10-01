@@ -524,6 +524,27 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> sendSignupOTP({
+    required String email,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '$baseUrl/user/send-signup-otp',
+        data: {
+          'email': email,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return response.data;
+      }
+
+      throw Exception('Failed to send signup OTP');
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
   Future<Map<String, dynamic>> resendOTP({
     required String email,
   }) async {
@@ -588,7 +609,7 @@ class ApiService {
         '$baseUrl/user/verify-otp',
         data: {
           'email': email,
-          'otp': otp,
+          'otp_code': otp,
         },
       );
 

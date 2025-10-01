@@ -62,10 +62,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
     try {
-      final response = await _apiService.sendOTP(email: event.email);
+      final response = await _apiService.sendSignupOTP(email: event.email);
       emit(AuthOTPSent(
         message: response['message'] ?? 'OTP sent successfully',
         email: event.email,
+        otpCode: response['otp_code'], // Include OTP for testing
       ));
     } catch (e) {
       emit(AuthError(message: e.toString()));
@@ -78,10 +79,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
     try {
-      final response = await _apiService.resendOTP(email: event.email);
+      final response = await _apiService.sendSignupOTP(email: event.email);
       emit(AuthOTPSent(
         message: response['message'] ?? 'OTP resent successfully',
         email: event.email,
+        otpCode: response['otp_code'], // Include OTP for testing
       ));
     } catch (e) {
       emit(AuthError(message: e.toString()));

@@ -151,36 +151,12 @@ class _SignInPageState extends State<SignInPage> {
                 SizedBox(
                     height: ResponsiveLayout.getResponsiveSpacing(context,
                         mobile: 40, tablet: 60, desktop: 80)),
-                // Logo or App Title with Animation
-                Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    // Background glow effect
-                    Container(
-                      width: ResponsiveLayout.getResponsiveIconSize(context,
-                          mobile: 120, tablet: 140, desktop: 160),
-                      height: ResponsiveLayout.getResponsiveIconSize(context,
-                          mobile: 120, tablet: 140, desktop: 160),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(0.1),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.white.withOpacity(0.3),
-                            blurRadius: 20,
-                            spreadRadius: 5,
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Main icon
-                    Icon(
-                      HugeIcons.strokeRoundedGem,
-                      size: ResponsiveLayout.getResponsiveIconSize(context,
-                          mobile: 80, tablet: 100, desktop: 120),
-                      color: Colors.white,
-                    ),
-                  ],
+                // Logo or App Title
+                Icon(
+                  HugeIcons.strokeRoundedGem,
+                  size: ResponsiveLayout.getResponsiveIconSize(context,
+                      mobile: 80, tablet: 100, desktop: 120),
+                  color: Colors.white,
                 ),
                 SizedBox(
                     height: ResponsiveLayout.getResponsiveSpacing(context,

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolab/features/Auth/Bloc/auth_bloc.dart';
 import 'package:geolab/features/Auth/Bloc/auth_state.dart';
-import 'package:geolab/config/theme_service.dart';
+import 'package:geolab/Service/theme_service.dart';
 import 'package:geolab/utils/custom_back_button.dart';
 import 'package:geolab/utils/rtl_wrapper.dart';
 import 'package:geolab/utils/app_localizations.dart';

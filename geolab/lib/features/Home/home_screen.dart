@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:geolab/config/theme_service.dart';
+import 'package:geolab/Service/theme_service.dart';
 import 'package:geolab/features/Home/components/MyCircleButton.dart';
 import 'package:geolab/features/Home/components/MyDrawer.dart';
 import 'package:geolab/features/RockClassification/Bloc/rock_classification_bloc.dart';
@@ -232,7 +232,11 @@ class _HomePageState extends State<HomePage> {
   // ============================================================================
 
   void _classifyImage(io.File imageFile) {
-    context.read<RockClassificationBloc>().add(ClassifyRock(imageFile));
+    try {
+      context.read<RockClassificationBloc>().add(ClassifyRock(imageFile));
+    } catch (e) {
+      _showErrorMessage('Error starting classification: $e');
+    }
   }
 
   Future<void> _saveImage(Uint8List bytes) async {
@@ -478,44 +482,60 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildSidebarButton() {
     return Container(
+      width: 70,
+      height: 70,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: _themeService.surfaceColor.withOpacity(0.2),
       ),
-        child: IconButton(
-          icon: Icon(
-            HugeIcons.strokeRoundedSidebarRight01,
-            color: _themeService.onSurfaceColor,
-            size: ResponsiveLayout.getResponsiveIconSize(
-              context,
-              mobile: 24,
-              tablet: 28,
-              desktop: 32,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(35),
+            onTap: () => _scaffoldKey.currentState!.openDrawer(),
+            child: Center(
+              child: Icon(
+                HugeIcons.strokeRoundedSidebarRight01,
+                color: _themeService.onSurfaceColor,
+                size: ResponsiveLayout.getResponsiveIconSize(
+                  context,
+                  mobile: 32,
+                  tablet: 36,
+                  desktop: 40,
+                ),
+              ),
             ),
           ),
-          onPressed: () => _scaffoldKey.currentState!.openDrawer(),
         ),
     );
   }
 
   Widget _buildFlashButton() {
     return Container(
+      width: 70,
+      height: 70,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: _themeService.surfaceColor.withOpacity(0.2),
       ),
-        child: IconButton(
-          icon: Icon(
-            _isFlashOn ? HugeIcons.strokeRoundedFlash : HugeIcons.strokeRoundedFlashOff,
-            color: _isFlashOn ? Colors.yellow : _themeService.onSurfaceColor,
-            size: ResponsiveLayout.getResponsiveIconSize(
-              context,
-              mobile: 20,
-              tablet: 24,
-              desktop: 28,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(35),
+            onTap: _toggleFlash,
+            child: Center(
+              child: Icon(
+                _isFlashOn ? HugeIcons.strokeRoundedFlash : HugeIcons.strokeRoundedFlashOff,
+                color: _isFlashOn ? Colors.yellow : _themeService.onSurfaceColor,
+                size: ResponsiveLayout.getResponsiveIconSize(
+                  context,
+                  mobile: 28,
+                  tablet: 32,
+                  desktop: 36,
+                ),
+              ),
             ),
           ),
-          onPressed: _toggleFlash,
         ),
     );
   }

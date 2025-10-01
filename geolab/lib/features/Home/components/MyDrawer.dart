@@ -10,7 +10,7 @@ import 'package:geolab/Service/api_service.dart';
 import 'package:geolab/models/prediction_model.dart';
 import 'package:geolab/utils/app_localizations.dart';
 import 'package:geolab/utils/rtl_wrapper.dart';
-import 'package:geolab/config/theme_service.dart';
+import 'package:geolab/Service/theme_service.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 class MyDrawer extends StatelessWidget {

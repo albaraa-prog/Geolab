@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolab/features/RockClassification/Bloc/rock_classification_bloc.dart';
 import 'package:geolab/features/RockClassification/Bloc/rock_classification_event.dart';
 import 'package:geolab/features/RockClassification/Bloc/rock_classification_state.dart';
-import 'package:geolab/config/theme_service.dart';
+import 'package:geolab/Service/theme_service.dart';
 
 class RockClassificationPage extends StatelessWidget {
   const RockClassificationPage({super.key});

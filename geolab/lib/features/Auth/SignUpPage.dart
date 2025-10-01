@@ -297,9 +297,16 @@ String? _otpError;
                 _showOTPStep = true;
               });
               _startResendTimer();
+              
+              // Show OTP in snackbar for testing
+              String message = context.t('auth.otp.sent');
+              if (state.otpCode != null) {
+                message += '\nOTP for testing: ${state.otpCode}';
+              }
+              
               AppAlerts.showSnackbar(
                 context,
-                context.t('auth.otp.sent'),
+                message,
                 color: AppTheme.successColor,
               );
             } else if (state is AuthAuthenticated) {

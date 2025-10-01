@@ -4,7 +4,7 @@ import 'package:geolab/Service/subscription_service.dart';
 import 'package:geolab/features/Auth/Bloc/auth_bloc.dart';
 import 'package:geolab/features/Auth/Bloc/auth_state.dart';
 import 'package:geolab/models/subscription_model.dart';
-import 'package:geolab/config/theme_service.dart';
+import 'package:geolab/Service/theme_service.dart';
 import 'package:geolab/features/Settings/bloc/settings_bloc.dart';
 import 'package:geolab/features/Settings/bloc/settings_event.dart';
 import 'package:geolab/features/Settings/bloc/settings_state.dart';

@@ -39,6 +39,15 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+        },
+      ),
+      // Faster animations for theme changes
+      splashFactory: InkRipple.splashFactory,
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
       colorScheme: const ColorScheme.light(
         primary: primaryColor,
         primaryContainer: primaryLightColor,
@@ -221,6 +230,15 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+        },
+      ),
+      // Faster animations for theme changes
+      splashFactory: InkRipple.splashFactory,
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
       colorScheme: const ColorScheme.dark(
         primary: primaryLightColor,
         primaryContainer: primaryColor,

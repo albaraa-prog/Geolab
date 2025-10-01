@@ -35,14 +35,16 @@ class AuthError extends AuthState {
 class AuthOTPSent extends AuthState {
   final String message;
   final String email;
+  final String? otpCode; // Add OTP code for testing
 
   const AuthOTPSent({
     required this.message,
     required this.email,
+    this.otpCode,
   });
 
   @override
-  List<Object?> get props => [message, email];
+  List<Object?> get props => [message, email, otpCode];
 }
 
 class AuthOTPVerified extends AuthState {
