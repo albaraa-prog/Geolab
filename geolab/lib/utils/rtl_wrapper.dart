@@ -175,6 +175,7 @@ class RTLUtils {
   static IconData chevronIcon(BuildContext context) {
     final localizationService =
         Provider.of<LocalizationService>(context, listen: false);
+    // RTL should point right, LTR should point left
     return localizationService.isRTL ? Icons.chevron_right : Icons.chevron_left;
   }
 

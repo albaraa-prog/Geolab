@@ -22,16 +22,21 @@ class CustomBackButton extends StatelessWidget {
     
     return Consumer<LocalizationService>(
       builder: (context, localizationService, _) {
+        // Determine arrow direction based on language
+        final isRTL = localizationService.isRTL;
+        final arrowIcon = isRTL 
+            ? HugeIcons.strokeRoundedArrowRight01  // Right arrow for RTL
+            : HugeIcons.strokeRoundedArrowLeft01;  // Left arrow for LTR (English)
+        
+        // Always use white color for the back button
+        Color buttonColor = color ?? Colors.white;
+        
         return IconButton(
           onPressed: onPressed ?? () => Navigator.of(context).pop(),
-          icon: Transform(
-            alignment: Alignment.center,
-            transform: Matrix4.rotationY(localizationService.isRTL ? 3.14159 : 0), // Flip for RTL, normal for LTR
-            child: HugeIcon(
-              icon: HugeIcons.strokeRoundedArrowRight01,
-              size: size,
-              color: color ?? themeService.primaryColor,
-            ),
+          icon: HugeIcon(
+            icon: arrowIcon,
+            size: size,
+            color: buttonColor,
           ),
         );
       },

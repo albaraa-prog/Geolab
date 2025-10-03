@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolab/Service/api_service.dart';
+import 'package:geolab/Service/network_service.dart';
 import 'package:geolab/config/localization_config.dart';
 import 'package:geolab/config/router.dart';
 import 'package:geolab/config/theme.dart';
@@ -18,6 +19,9 @@ void main() async {
 
   // Initialize services
   await LocalizationService.instance.loadTranslations();
+  
+  // Initialize network service
+  await NetworkService().initialize();
 
   runApp(const GeolabApp());
 }

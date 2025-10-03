@@ -21,6 +21,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:geolab/Service/api_service.dart' as geolabApi;
+import 'package:geolab/Service/network_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -49,6 +50,11 @@ class _HomePageState extends State<HomePage> {
   // Lifecycle state
   bool _isDisposed = false;
 
+  // Network connectivity state
+  bool _isConnected = true;
+  final NetworkService _networkService = NetworkService();
+  Timer? _connectivityTimer;
+
   // Theme service
   ThemeService get _themeService => ThemeService.instance;
 
@@ -56,13 +62,43 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _initializeCamera();
+    _checkConnectivity();
+    _startConnectivityTimer();
   }
 
   @override
   void dispose() {
     _isDisposed = true;
     _disposeCamera();
+    _connectivityTimer?.cancel();
     super.dispose();
+  }
+
+  // ============================================================================
+  // NETWORK CONNECTIVITY MANAGEMENT
+  // ============================================================================
+
+  Future<void> _checkConnectivity() async {
+    try {
+      final isConnected = await _networkService.checkConnectivity();
+      if (mounted && !_isDisposed) {
+        setState(() {
+          _isConnected = isConnected;
+        });
+      }
+    } catch (e) {
+      print('Error checking connectivity: $e');
+    }
+  }
+
+  void _startConnectivityTimer() {
+    _connectivityTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
+      if (mounted && !_isDisposed) {
+        _checkConnectivity();
+      } else {
+        timer.cancel();
+      }
+    });
   }
 
   // ============================================================================
@@ -473,7 +509,13 @@ class _HomePageState extends State<HomePage> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             _buildSidebarButton(),
-            if (!kIsWeb) _buildFlashButton(),
+            Row(
+              children: [
+                //_buildConnectivityIndicator(),
+                const SizedBox(width: 8),
+                if (!kIsWeb) _buildFlashButton(),
+              ],
+            ),
           ],
         ),
       ),
@@ -579,9 +621,9 @@ class _HomePageState extends State<HomePage> {
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
       child: kIsWeb && _capturedImageBytes != null
-          ? Image.memory(_capturedImageBytes!, fit: BoxFit.cover)
+          ? Image.memory(_capturedImageBytes!, fit: BoxFit.contain)
           : _capturedImage != null
-              ? Image.file(_capturedImage!, fit: BoxFit.cover)
+              ? Image.file(_capturedImage!, fit: BoxFit.contain)
               : const SizedBox(),
     );
   }
@@ -783,7 +825,7 @@ class _HomePageState extends State<HomePage> {
     return ResponsiveContainer(
       maxWidth: ResponsiveLayout.isWeb(context) ? 500 : null,
       child: RTLWrapper(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: ResponsiveLayout.getResponsivePadding(context),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -813,6 +855,7 @@ class _HomePageState extends State<HomePage> {
               ),
               const SizedBox(height: 20),
               if (state.additionalData != null) _buildAdditionalData(state),
+              const SizedBox(height: 20),
               Align(
                 alignment: RTLUtils.endAlignment(context),
                 child: ElevatedButton(
@@ -886,12 +929,46 @@ class _HomePageState extends State<HomePage> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (xaiUrl != null)
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.network(
-              xaiUrl,
-              height: 180,
-              fit: BoxFit.cover,
+          ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxHeight: 300,
+              maxWidth: double.infinity,
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.network(
+                xaiUrl,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    height: 200,
+                    decoration: BoxDecoration(
+                      color: _themeService.dividerColor,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.image_not_supported,
+                            color: _themeService.textColor.withOpacity(0.5),
+                            size: 48,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'XAI visualization unavailable',
+                            style: TextStyle(
+                              color: _themeService.textColor.withOpacity(0.5),
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
           ),
         const SizedBox(height: 12),
@@ -902,7 +979,9 @@ class _HomePageState extends State<HomePage> {
           ),
           builder: (context, snapshot) {
             final text = snapshot.data ?? 
-                         context.t('rockClassification.generatingExplanation');
+                         (context.t('rockClassification.generatingExplanation') != 'rockClassification.generatingExplanation'
+                          ? context.t('rockClassification.generatingExplanation')
+                          : 'Generating explanation...');
             return Text(
               text,
               style: TextStyle(color: _themeService.textColor.withOpacity(0.8)),
@@ -911,6 +990,44 @@ class _HomePageState extends State<HomePage> {
         ),
         const SizedBox(height: 16),
       ],
+    );
+  }
+
+  Widget _buildConnectivityIndicator() {
+    return GestureDetector(
+      onTap: _checkConnectivity,
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: _isConnected 
+              ? Colors.green.withOpacity(0.2)
+              : Colors.red.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: _isConnected ? Colors.green : Colors.red,
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              _isConnected ? HugeIcons.strokeRoundedWifi01 : HugeIcons.strokeRoundedWifiOff01,
+              color: _isConnected ? Colors.green : Colors.red,
+              size: 16,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              _isConnected ? 'Online' : 'Offline',
+              style: TextStyle(
+                color: _isConnected ? Colors.green : Colors.red,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

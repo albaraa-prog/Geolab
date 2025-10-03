@@ -6,7 +6,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.3.0'
+        classpath 'com.android.tools.build:gradle:8.7.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
@@ -15,6 +15,32 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+    }
+}
+
+// Configure Java toolchain for all projects
+subprojects {
+    afterEvaluate { project ->
+        if (project.hasProperty('android')) {
+            project.android {
+                compileOptions {
+                    sourceCompatibility = JavaVersion.VERSION_17
+                    targetCompatibility = JavaVersion.VERSION_17
+                }
+            }
+        }
+        
+        // Configure Kotlin JVM target for all projects
+        project.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
+            kotlinOptions {
+                jvmTarget = "17"
+            }
+        }
+        
+        // Suppress Java 8 obsolete warnings for all projects
+        project.tasks.withType(JavaCompile) {
+            options.compilerArgs += ['-Xlint:-options']
+        }
     }
 }
 

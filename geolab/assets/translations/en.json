@@ -146,6 +146,14 @@
       "version": "Version",
       "license": "License",
       "licenseText": "This app is licensed under the MIT License."
+    },
+    "subscription": {
+      "title": "Subscription",
+      "tier": "Subscription Tier",
+      "usage": "Daily Usage",
+      "remaining": "Remaining Requests",
+      "notLoggedIn": "Please sign in to view subscription details",
+      "error": "Unable to load subscription information"
     }
   },
   "subscription": {
@@ -167,7 +175,8 @@
     "hardness": "Hardness",
     "density": "Density",
     "rockType": "Rock Type",
-    "error": "Classification Failed"
+    "error": "Classification Failed",
+    "generatingExplanation": "Generating explanation..."
   },
   "feedback": {
     "title": "Feedback",

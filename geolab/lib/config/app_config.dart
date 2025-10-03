@@ -1,10 +1,10 @@
 class AppConfig {
   // Backend configuration
   // For Android emulator
-  // static const String baseUrl = 'http://10.0.2.2:8000/api';
+  static const String baseUrl = 'http://10.0.2.2:8000/api';
   
   // For Windows desktop/web testing
-  static const String baseUrl = 'http://localhost:8000/api';
+  // static const String baseUrl = 'http://localhost:8000/api';
 
   // For physical device testing, change this to your PC's IP address
   // static const String baseUrl = 'http://192.168.1.100:8000/api';

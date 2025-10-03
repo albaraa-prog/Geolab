@@ -23,8 +23,12 @@ class SettingsPage extends StatelessWidget {
     return RTLWrapper(
       child: Scaffold(
         appBar: AppBar(
-          title: Text(
-            context.read<LocalizationService>().translate('app.settings'),
+          title: Consumer<LocalizationService>(
+            builder: (context, localizationService, child) {
+              return Text(
+                localizationService.translate('app.settings'),
+              );
+            },
           ),
           leading: const CustomBackButton(),
         ),
@@ -37,6 +41,8 @@ class SettingsPage extends StatelessWidget {
                   children: [
                     const SizedBox(height: 20),
                     _buildProfileSection(context, localizationService),
+                    const SizedBox(height: 30),
+                    _buildSubscriptionSection(context, localizationService),
                     const SizedBox(height: 30),
                     _buildThemeSection(context, themeService, state),
                     const SizedBox(height: 20),
@@ -77,7 +83,8 @@ class SettingsPage extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       radius: 40,
-                      backgroundColor: themeService.primaryColor.withOpacity(0.1),
+                      backgroundColor:
+                          themeService.primaryColor.withOpacity(0.1),
                       child: Icon(
                         HugeIcons.strokeRoundedUserQuestion01,
                         size: 50,
@@ -117,7 +124,11 @@ class SettingsPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  userName.isNotEmpty ? userName : (isAuthed && userEmail.isNotEmpty ? userEmail : fallbackTitle),
+                  userName.isNotEmpty
+                      ? userName
+                      : (isAuthed && userEmail.isNotEmpty
+                          ? userEmail
+                          : fallbackTitle),
                   style: Theme.of(context).textTheme.headlineSmall,
                   textAlign: RTLUtils.startTextAlignment(context),
                 ),
@@ -129,30 +140,26 @@ class SettingsPage extends StatelessWidget {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return Text(
                           localizationService.translate('common.loading'),
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium
-                              ?.copyWith(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurface
-                                    .withOpacity(0.7),
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withOpacity(0.7),
+                                  ),
                           textAlign: TextAlign.center,
                         );
                       }
                       if (!snapshot.hasData || snapshot.hasError) {
                         return Text(
                           fallbackSubtitle,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium
-                              ?.copyWith(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurface
-                                    .withOpacity(0.7),
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withOpacity(0.7),
+                                  ),
                           textAlign: TextAlign.center,
                         );
                       }
@@ -160,17 +167,19 @@ class SettingsPage extends StatelessWidget {
                       final usage = '${sub.requestCount}/${sub.dailyLimit}';
                       final remaining = sub.remainingRequests;
                       final tier = sub.subscriptionTier.toUpperCase();
-                      
+
                       return Column(
                         children: [
                           // Subscription Tier Badge
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
                               color: themeService.primaryColor.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                color: themeService.primaryColor.withOpacity(0.3),
+                                color:
+                                    themeService.primaryColor.withOpacity(0.3),
                                 width: 1,
                               ),
                             ),
@@ -184,7 +193,7 @@ class SettingsPage extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          
+
                           // Usage Information
                           Text(
                             '${localizationService.translate('subscription.usage')}: $usage',
@@ -199,20 +208,25 @@ class SettingsPage extends StatelessWidget {
                                 ),
                             textAlign: TextAlign.center,
                           ),
-                          
+
                           // Progress Bar
                           const SizedBox(height: 8),
                           ClipRRect(
                             borderRadius: BorderRadius.circular(4),
                             child: LinearProgressIndicator(
-                              value: sub.dailyLimit > 0 ? (sub.requestCount / sub.dailyLimit).clamp(0.0, 1.0) : 0.0,
+                              value: sub.dailyLimit > 0
+                                  ? (sub.requestCount / sub.dailyLimit)
+                                      .clamp(0.0, 1.0)
+                                  : 0.0,
                               backgroundColor: themeService.dividerColor,
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                remaining <= 1 ? themeService.errorColor : themeService.primaryColor,
+                                remaining <= 1
+                                    ? themeService.errorColor
+                                    : themeService.primaryColor,
                               ),
                             ),
                           ),
-                          
+
                           // Warning or Success Message
                           if (remaining <= 1)
                             Padding(
@@ -227,7 +241,8 @@ class SettingsPage extends StatelessWidget {
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
-                                    localizationService.translate('subscription.almostOut'),
+                                    localizationService
+                                        .translate('subscription.almostOut'),
                                     style: TextStyle(
                                       color: themeService.errorColor,
                                       fontWeight: FontWeight.w500,
@@ -265,10 +280,7 @@ class SettingsPage extends StatelessWidget {
                 else
                   Text(
                     fallbackSubtitle,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(context)
                               .colorScheme
                               .onSurface
@@ -284,6 +296,211 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
+  Widget _buildSubscriptionSection(
+      BuildContext context, LocalizationService localizationService) {
+    final subscriptionService = SubscriptionService();
+    final themeService = ThemeService.instance;
+
+    return Card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.only(
+              top: 20,
+              bottom: 8,
+            ).add(RTLUtils.padding(
+              left: 16,
+              right: 16,
+              context: context,
+            )),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context
+                      .read<LocalizationService>()
+                      .translate('settings.subscription.title'),
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  height: 1,
+                  color: themeService.dividerColor,
+                ),
+              ],
+            ),
+          ),
+          BlocBuilder<AuthBloc, AuthState>(
+            builder: (context, authState) {
+              final isAuthed = authState is AuthAuthenticated;
+              
+              if (!isAuthed) {
+                return Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Center(
+                    child: Text(
+                      localizationService.translate('settings.subscription.notLoggedIn'),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                );
+              }
+
+              return FutureBuilder<SubscriptionModel>(
+                future: subscriptionService.getSubscriptionStatus(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Center(
+                        child: Column(
+                          children: [
+                            const CircularProgressIndicator(),
+                            const SizedBox(height: 16),
+                            Text(
+                              localizationService.translate('common.loading'),
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+
+                  if (!snapshot.hasData || snapshot.hasError) {
+                    return Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Center(
+                        child: Text(
+                          localizationService.translate('settings.subscription.error'),
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    );
+                  }
+
+                  final sub = snapshot.data!;
+                  final usage = '${sub.requestCount}/${sub.dailyLimit}';
+                  final remaining = sub.remainingRequests;
+                  final tier = sub.subscriptionTier.toUpperCase();
+
+                  return Column(
+                    children: [
+                      // Subscription Tier
+                      ListTile(
+                        leading: Icon(
+                          HugeIcons.strokeRoundedUserQuestion01,
+                          color: themeService.primaryColor,
+                        ),
+                        title: Text(
+                          localizationService.translate('settings.subscription.tier'),
+                        ),
+                        subtitle: Text(tier),
+                        trailing: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: themeService.primaryColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: themeService.primaryColor.withOpacity(0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: Text(
+                            tier,
+                            style: TextStyle(
+                              color: themeService.primaryColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ),
+                      
+                      // Usage Information
+                      ListTile(
+                        leading: Icon(
+                          Icons.bar_chart,
+                          color: Theme.of(context).colorScheme.secondary,
+                        ),
+                        title: Text(
+                          localizationService.translate('settings.subscription.usage'),
+                        ),
+                        subtitle: Text(usage),
+                        trailing: ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: SizedBox(
+                            width: 60,
+                            child: LinearProgressIndicator(
+                              value: sub.dailyLimit > 0
+                                  ? (sub.requestCount / sub.dailyLimit).clamp(0.0, 1.0)
+                                  : 0.0,
+                              backgroundColor: themeService.dividerColor,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                remaining <= 1
+                                    ? themeService.errorColor
+                                    : themeService.primaryColor,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // Remaining Requests
+                      ListTile(
+                        leading: Icon(
+                          Icons.timer,
+                          color: remaining <= 1 
+                              ? themeService.errorColor 
+                              : remaining <= 5 
+                                  ? themeService.warningColor 
+                                  : themeService.primaryColor,
+                        ),
+                        title: Text(
+                          localizationService.translate('settings.subscription.remaining'),
+                        ),
+                        subtitle: Text(
+                          remaining <= 1
+                              ? localizationService.translate('settings.subscription.almostOut')
+                              : remaining <= 5
+                                  ? '${localizationService.translate('settings.subscription.remaining')}: $remaining'
+                                  : '${localizationService.translate('settings.subscription.remaining')}: $remaining',
+                        ),
+                        trailing: remaining <= 1
+                            ? Icon(
+                                HugeIcons.strokeRoundedAlert01,
+                                color: themeService.errorColor,
+                              )
+                            : remaining <= 5
+                                ? Icon(
+                                    HugeIcons.strokeRoundedAlert01,
+                                    color: themeService.warningColor,
+                                  )
+                                : Icon(
+                                    Icons.check_circle,
+                                    color: themeService.primaryColor,
+                                  ),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildThemeSection(
       BuildContext context, ThemeService themeService, SettingsState state) {
     return Card(
@@ -291,16 +508,29 @@ class SettingsPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: RTLUtils.padding(
+            padding: EdgeInsets.only(
+              top: 20,
+              bottom: 8,
+            ).add(RTLUtils.padding(
               left: 16,
               right: 16,
               context: context,
-            ),
-            child: Text(
-              context
-                  .read<LocalizationService>()
-                  .translate('settings.theme.title'),
-              style: Theme.of(context).textTheme.titleLarge,
+            )),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context
+                      .read<LocalizationService>()
+                      .translate('settings.theme.title'),
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  height: 1,
+                  color: themeService.dividerColor,
+                ),
+              ],
             ),
           ),
           ListTile(
@@ -362,21 +592,36 @@ class SettingsPage extends StatelessWidget {
 
   Widget _buildLanguageSection(BuildContext context,
       LocalizationService localizationService, SettingsState state) {
+    final themeService = ThemeService.instance;
+    
     return Card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: RTLUtils.padding(
+            padding: EdgeInsets.only(
+              top: 20,
+              bottom: 8,
+            ).add(RTLUtils.padding(
               left: 16,
               right: 16,
               context: context,
-            ),
-            child: Text(
-              context
-                  .read<LocalizationService>()
-                  .translate('settings.language.title'),
-              style: Theme.of(context).textTheme.titleLarge,
+            )),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context
+                      .read<LocalizationService>()
+                      .translate('settings.language.title'),
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  height: 1,
+                  color: themeService.dividerColor,
+                ),
+              ],
             ),
           ),
           ListTile(
@@ -393,9 +638,6 @@ class SettingsPage extends StatelessWidget {
               localizationService
                   .getLocaleDisplayName(localizationService.currentLocale),
             ),
-            trailing: Icon(
-              RTLUtils.chevronIcon(context),
-            ),
             onTap: () => _showLanguageDialog(context, localizationService),
           ),
         ],
@@ -403,25 +645,38 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  
-
   Widget _buildAboutSection(
       BuildContext context, LocalizationService localizationService) {
+    final themeService = ThemeService.instance;
+    
     return Card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: RTLUtils.padding(
+            padding: EdgeInsets.only(
+              top: 20,
+              bottom: 8,
+            ).add(RTLUtils.padding(
               left: 16,
               right: 16,
               context: context,
-            ),
-            child: Text(
-              context
-                  .read<LocalizationService>()
-                  .translate('settings.about.title'),
-              style: Theme.of(context).textTheme.titleLarge,
+            )),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context
+                      .read<LocalizationService>()
+                      .translate('settings.about.title'),
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  height: 1,
+                  color: themeService.dividerColor,
+                ),
+              ],
             ),
           ),
           ListTile(
@@ -445,10 +700,7 @@ class SettingsPage extends StatelessWidget {
               context
                   .read<LocalizationService>()
                   .translate('settings.about.license'),
-            ),
-            trailing: Icon(
-              RTLUtils.chevronIcon(context),
-            ),
+            ),  
             onTap: () => _showLicenseDialog(context),
           ),
         ],
@@ -496,10 +748,11 @@ class SettingsPage extends StatelessWidget {
                         child: CircularProgressIndicator(),
                       ),
                     );
-                    
+
                     // Change language
-                    await localizationService.setLanguageCode(language['code']!);
-                    
+                    await localizationService
+                        .setLanguageCode(language['code']!);
+
                     // Close loading dialog and language dialog
                     if (context.mounted) {
                       Navigator.of(context).pop(); // Close loading
@@ -522,7 +775,6 @@ class SettingsPage extends StatelessWidget {
       ),
     );
   }
-
 
   void _showLicenseDialog(BuildContext context) {
     showAboutDialog(

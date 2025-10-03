@@ -8,6 +8,7 @@ import 'package:geolab/models/feedback_model.dart';
 import 'package:geolab/models/prediction_model.dart';
 import 'package:geolab/models/subscription_model.dart';
 import 'package:geolab/models/user_model.dart';
+import 'package:geolab/Service/network_service.dart';
 import 'package:http_parser/http_parser.dart' show MediaType;
 
 class ApiService {
@@ -16,6 +17,7 @@ class ApiService {
 
   final Dio _dio = Dio();
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  final NetworkService _networkService = NetworkService();
 
   ApiService() {
     _setupInterceptors();
@@ -70,6 +72,13 @@ class ApiService {
     await _storage.delete(key: AuthConstants.tokenKey);
   }
 
+  // Check network connectivity before making API calls
+  Future<void> _checkConnectivity() async {
+    final isConnected = await _networkService.checkConnectivity();
+    if (!isConnected) {
+      throw Exception('No internet connection. Please check your network settings.');
+    }
+  }
 
   
 
@@ -78,6 +87,8 @@ class ApiService {
     required String password,
   }) async {
     try {
+      await _checkConnectivity();
+      
       final response = await _dio.post(
         '$baseUrl/user/login',
         data: {
@@ -146,6 +157,8 @@ class ApiService {
   // Prediction Methods
   Future<PredictionModel> predictRockType(io.File imageFile) async {
     try {
+      await _checkConnectivity();
+      
       print('Sending image: ${imageFile.path}');
 
       final token = await _getToken();
@@ -256,12 +269,22 @@ class ApiService {
   // Build absolute URL for uploaded files served by backend
   String buildFileUrl(String relativePath) {
     if (relativePath.startsWith('http')) return relativePath;
-    // backend serves at /api/uploads/<path>; our stored path often like 'uploads/xai/..'
-    final normalized = relativePath.replaceFirst(RegExp(r'^/+'), '');
-    final trimmed = normalized.startsWith('uploads/')
-        ? normalized.substring('uploads/'.length)
-        : normalized;
-    return '$baseUrl/uploads/$trimmed';
+    
+    // Normalize the path by converting backslashes to forward slashes and removing leading slashes
+    final normalized = relativePath
+        .replaceAll('\\', '/')
+        .replaceFirst(RegExp(r'^/+'), '');
+    
+    // If the path already starts with 'uploads/', use it as is
+    // If it doesn't start with 'uploads/', add it
+    final finalPath = normalized.startsWith('uploads/') 
+        ? normalized 
+        : 'uploads/$normalized';
+    
+    // Backend serves files at /api/uploads/ (keep the /api part)
+    final result = '$baseUrl/$finalPath';
+    print('buildFileUrl: input="$relativePath" -> output="$result"');
+    return result;
   }
 
   // Explain endpoint (Gen-AI lightweight)
@@ -666,6 +689,14 @@ class ApiService {
   // Test connection method
   Future<bool> testConnection() async {
     try {
+      // First check if device has internet connectivity
+      final isConnected = await _networkService.checkConnectivity();
+      if (!isConnected) {
+        print('No internet connection available');
+        return false;
+      }
+
+      // Then test if we can reach the API server
       final response = await _dio.get(
         AppConfig.getUrl(AppConfig.healthEndpoint),
         options: Options(
