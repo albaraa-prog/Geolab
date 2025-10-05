@@ -40,6 +40,10 @@ class RockClassificationServiceImpl implements RockClassificationService {
         },
       );
     } catch (e) {
+      print('Rock classification service error: $e');
+      if (e.toString().contains('422') || e.toString().contains('Image processing failed')) {
+        throw Exception('Image processing failed: ${e.toString()}');
+      }
       throw Exception('Classification failed: ${e.toString()}');
     }
   }

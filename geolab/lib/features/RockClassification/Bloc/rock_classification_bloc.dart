@@ -136,7 +136,20 @@ class RockClassificationBloc
       ));
     } catch (e) {
       print('Classification error: $e');
-      emit(ClassificationError('Classification error: ${e.toString()}'));
+      String errorMessage = e.toString();
+      
+      // Provide user-friendly error messages
+      if (errorMessage.contains('Image processing failed')) {
+        emit(const ClassificationError('Image processing failed. Please try a different image.'));
+      } else if (errorMessage.contains('422')) {
+        emit(const ClassificationError('Invalid image format. Please use JPG, PNG, or other supported formats.'));
+      } else if (errorMessage.contains('Authentication required')) {
+        emit(const ClassificationError('Please log in to use rock classification'));
+      } else if (errorMessage.contains('Daily limit reached')) {
+        emit(const ClassificationError('Daily limit reached. Please upgrade your subscription or try again tomorrow.'));
+      } else {
+        emit(ClassificationError('Classification error: ${e.toString()}'));
+      }
     }
   }
 

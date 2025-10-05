@@ -204,6 +204,12 @@ class ApiService {
         }
       }
 
+      // Handle specific error cases
+      if (response.statusCode == 422) {
+        final errorMsg = response.data?['error'] ?? 'Image processing failed';
+        throw Exception('Classification error: $errorMsg');
+      }
+
       throw Exception(response.data?['error'] ??
           'Prediction failed with status ${response.statusCode}');
     } catch (e) {
