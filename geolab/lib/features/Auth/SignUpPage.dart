@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolab/features/Auth/Bloc/auth_bloc.dart';
 import 'package:geolab/features/Auth/Bloc/auth_event.dart';
 import 'package:geolab/features/Auth/Bloc/auth_state.dart';
 import 'package:geolab/features/Auth/component/CustomButton.dart';
-import 'package:geolab/features/Auth/component/OTPInputField.dart';
 import 'package:geolab/features/Auth/component/TextInputField.dart';
 import 'package:geolab/features/Auth/component/validators.dart';
 import 'package:geolab/utils/alerts.dart';
@@ -15,6 +13,7 @@ import 'package:geolab/utils/rtl_wrapper.dart';
 import 'package:geolab/config/theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 
 class SignUpPage extends StatefulWidget {
@@ -26,24 +25,15 @@ class SignUpPage extends StatefulWidget {
 
 class _SignUpPageState extends State<SignUpPage> {
   final _formKey = GlobalKey<FormState>();
-  final _otpFormKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  final _otpController = TextEditingController();
-
-  final GlobalKey<OTPInputFieldState> _otpFieldKey = GlobalKey<OTPInputFieldState>();
-String? _otpError;
   
   bool _isLoading = false;
-  bool _showOTPStep = false;
+  bool _emailSent = false;
   int _resendTimer = 0;
-  
-  // Store user data for OTP verification step
   String _pendingEmail = '';
-  String _pendingName = '';
-  String _pendingPassword = '';
 
   @override
   void dispose() {
@@ -51,7 +41,6 @@ String? _otpError;
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
-    _otpController.dispose();
     super.dispose();
   }
 
@@ -83,47 +72,29 @@ String? _otpError;
         return;
       }
 
-      // Store user data and send OTP
+      // Store email and send verification email
       _pendingEmail = _emailController.text.trim();
-      _pendingName = _nameController.text.trim();
-      _pendingPassword = _passwordController.text.trim();
+      final name = _nameController.text.trim();
+      final password = _passwordController.text.trim();
 
-      // Send OTP request to your backend
+      // Send email verification request
       BlocProvider.of<AuthBloc>(context).add(
-        AuthSendOTPRequested(email: _pendingEmail),
-      );
-    }
-  }
-
-  void _verifyOTP() {
-    if (_otpFormKey.currentState?.validate() ?? false) {
-      // Verify OTP and complete registration
-      BlocProvider.of<AuthBloc>(context).add(
-        AuthVerifyOTPAndRegister(
+        AuthSendEmailVerificationRequested(
           email: _pendingEmail,
-          name: _pendingName,
-          password: _pendingPassword,
-          otp: _otpController.text.trim(),
-          subscriptionTier: 'free',
+          name: name,
+          password: password,
         ),
       );
     }
   }
 
-  void _resendOTP() {
+  void _resendEmail() {
     if (_resendTimer == 0) {
       BlocProvider.of<AuthBloc>(context).add(
-        AuthResendOTPRequested(email: _pendingEmail),
+        AuthResendEmailVerificationRequested(email: _pendingEmail),
       );
       _startResendTimer();
     }
-  }
-
-  void _goBackToSignUp() {
-    setState(() {
-      _showOTPStep = false;
-      _otpController.clear();
-    });
   }
 
   @override
@@ -153,10 +124,15 @@ String? _otpError;
           ),
         ),
         child: SafeArea(
-          child: SingleChildScrollView(
-            padding: ResponsiveLayout.getResponsivePadding(context),
-            child: Column(
-              children: [
+          child: Center(
+            child: SingleChildScrollView(
+              padding: ResponsiveLayout.getResponsivePadding(context),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: kIsWeb ? 500 : double.infinity,
+                ),
+                child: Column(
+                  children: [
                 SizedBox(
                     height: ResponsiveLayout.getResponsiveSpacing(context,
                         mobile: 40, tablet: 60, desktop: 80)),
@@ -183,8 +159,8 @@ String? _otpError;
                     height: ResponsiveLayout.getResponsiveSpacing(context,
                         mobile: 8, tablet: 12, desktop: 16)),
                 Text(
-                  _showOTPStep 
-                      ? context.t('auth.otp.subtitle')
+                  _emailSent 
+                      ? context.t('auth.emailVerification.subtitle')
                       : context.t('auth.signUp.subtitle'),
                   style: TextStyle(
                     fontSize: ResponsiveLayout.getResponsiveFontSize(context,
@@ -210,12 +186,14 @@ String? _otpError;
                       ),
                     ],
                   ),
-                  child: _showOTPStep ? _buildOTPForm() : _buildSignUpForm(),
+                  child: _emailSent ? _buildEmailVerificationMessage() : _buildSignUpForm(),
                 ),
                 SizedBox(
                     height: ResponsiveLayout.getResponsiveSpacing(context,
-                        mobile: 40, tablet: 60, desktop: 80)),
-              ],
+                        mobile: 40, tablet: 60, desktop: 80)                ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
@@ -291,25 +269,24 @@ String? _otpError;
         BlocConsumer<AuthBloc, AuthState>(
           listener: (context, state) {
             if (state is AuthError) {
-              AppAlerts.showAlert(context, 'Error', state.message);
-            } else if (state is AuthOTPSent) {
+              AppAlerts.showAlert(context, context.t('common.error'), state.message);
+            } else if (state is AuthEmailVerificationSent) {
               setState(() {
-                _showOTPStep = true;
+                _emailSent = true;
               });
               _startResendTimer();
               
-              // Show OTP in snackbar for testing
-              String message = context.t('auth.otp.sent');
-              if (state.otpCode != null) {
-                message += '\nOTP for testing: ${state.otpCode}';
-              }
-              
               AppAlerts.showSnackbar(
                 context,
-                message,
+                context.t('auth.emailVerification.sent'),
                 color: AppTheme.successColor,
               );
             } else if (state is AuthAuthenticated) {
+              AppAlerts.showSnackbar(
+                context,
+                context.t('auth.signUp.success'),
+                color: AppTheme.successColor,
+              );
               context.go('/');
             }
           },
@@ -319,7 +296,7 @@ String? _otpError;
               onPressed: _isLoading ? null : _submitForm,
               text: _isLoading
                   ? context.t('common.loading')
-                  : context.t('auth.signUp.sendOTP'),
+                  : context.t('auth.signUp.sendVerification'),
               isLoading: _isLoading,
             );
           },
@@ -360,22 +337,10 @@ String? _otpError;
 
 
 
-  Widget _buildOTPForm() {
-  return Form(
-    key: _otpFormKey,
-    child: Column(
+  Widget _buildEmailVerificationMessage() {
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Back button
-        Align(
-          alignment: Alignment.centerLeft,
-          child: IconButton(
-            onPressed: _goBackToSignUp,
-            icon: const Icon(HugeIcons.strokeRoundedArrowLeft01),
-            color: AppTheme.primaryColor,
-          ),
-        ),
-        const SizedBox(height: 8),
         Icon(
           HugeIcons.strokeRoundedMail01,
           size: ResponsiveLayout.getResponsiveIconSize(context,
@@ -389,7 +354,7 @@ String? _otpError;
                 tablet: 20,
                 desktop: 24)),
         Text(
-          context.t('auth.otp.title'),
+          context.t('auth.emailVerification.title'),
           style: TextStyle(
             fontSize: ResponsiveLayout.getResponsiveFontSize(
                 context,
@@ -408,7 +373,7 @@ String? _otpError;
                 tablet: 12,
                 desktop: 16)),
         Text(
-          context.t('auth.otp.description', {'email': _pendingEmail}),
+          context.t('auth.emailVerification.description', {'email': _pendingEmail}),
           style: TextStyle(
             fontSize: ResponsiveLayout.getResponsiveFontSize(
                 context,
@@ -422,28 +387,38 @@ String? _otpError;
         SizedBox(
             height: ResponsiveLayout.getResponsiveSpacing(
                 context,
-                mobile: 32,
-                tablet: 36,
-                desktop: 40)),
-        // Modern OTP Input Field
-        OTPInputField(
-          key: _otpFieldKey,
-          length: 6,
-          errorText: _otpError,
-          enabled: !_isLoading,
-          onChanged: (otp) {
-            // Clear error when user starts typing
-            if (_otpError != null) {
-              setState(() {
-                _otpError = null;
-              });
-            }
-          },
-          onCompleted: (otp) {
-            _otpController.text = otp;
-            // Auto-verify when complete
-            _verifyOTP();
-          },
+                mobile: 16,
+                tablet: 20,
+                desktop: 24)),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppTheme.primaryColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.info_outline,
+                color: AppTheme.primaryColor,
+                size: 20,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  context.t('auth.emailVerification.checkSpam'),
+                  style: TextStyle(
+                    fontSize: ResponsiveLayout.getResponsiveFontSize(
+                        context,
+                        mobile: 12,
+                        tablet: 14,
+                        desktop: 16),
+                    color: AppTheme.neutral700,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
         SizedBox(
             height: ResponsiveLayout.getResponsiveSpacing(
@@ -451,61 +426,11 @@ String? _otpError;
                 mobile: 24,
                 tablet: 28,
                 desktop: 32)),
-        BlocConsumer<AuthBloc, AuthState>(
-          listener: (context, state) {
-            if (state is AuthError) {
-              setState(() {
-                _otpError = state.message;
-              });
-              _otpFieldKey.currentState?.clearOTP();
-              AppAlerts.showAlert(context, 'Error', state.message);
-            } else if (state is AuthOTPSent) {
-              AppAlerts.showSnackbar(
-                context,
-                context.t('auth.otp.resent'),
-                color: AppTheme.successColor,
-              );
-            } else if (state is AuthAuthenticated) {
-              AppAlerts.showSnackbar(
-                context,
-                context.t('auth.signUp.success'),
-                color: AppTheme.successColor,
-              );
-              context.go('/');
-            }
-          },
-          builder: (context, state) {
-            _isLoading = state is AuthLoading;
-            return CustomButton(
-              onPressed: _isLoading ? null : () {
-                final otp = _otpFieldKey.otpValue;
-                if (otp.length == 6) {
-                  _otpController.text = otp;
-                  _verifyOTP();
-                } else {
-                  setState(() {
-                    _otpError = context.t('auth.otp.invalid');
-                  });
-                }
-              },
-              text: _isLoading
-                  ? context.t('common.loading')
-                  : context.t('auth.otp.verify'),
-              isLoading: _isLoading,
-            );
-          },
-        ),
-        SizedBox(
-            height: ResponsiveLayout.getResponsiveSpacing(
-                context,
-                mobile: 20,
-                tablet: 24,
-                desktop: 28)),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              context.t('auth.otp.didntReceive'),
+              context.t('auth.emailVerification.didntReceive'),
               style: TextStyle(
                 fontSize: ResponsiveLayout.getResponsiveFontSize(
                     context,
@@ -516,11 +441,11 @@ String? _otpError;
               ),
             ),
             TextButton(
-              onPressed: _resendTimer > 0 ? null : _resendOTP,
+              onPressed: _resendTimer > 0 ? null : _resendEmail,
               child: Text(
                 _resendTimer > 0 
-                    ? '${context.t('auth.otp.resend')} (${_resendTimer}s)'
-                    : context.t('auth.otp.resend'),
+                    ? '${context.t('auth.emailVerification.resend')} (${_resendTimer}s)'
+                    : context.t('auth.emailVerification.resend'),
                 style: TextStyle(
                   color: _resendTimer > 0 ? AppTheme.neutral500 : AppTheme.primaryColor,
                   fontWeight: FontWeight.w600,
@@ -534,10 +459,33 @@ String? _otpError;
             ),
           ],
         ),
+        SizedBox(
+            height: ResponsiveLayout.getResponsiveSpacing(
+                context,
+                mobile: 16,
+                tablet: 20,
+                desktop: 24)),
+        TextButton(
+          onPressed: () {
+            setState(() {
+              _emailSent = false;
+            });
+          },
+          child: Text(
+            context.t('common.back'),
+            style: TextStyle(
+              color: AppTheme.primaryColor,
+              fontSize: ResponsiveLayout.getResponsiveFontSize(
+                  context,
+                  mobile: 14,
+                  tablet: 16,
+                  desktop: 18),
+            ),
+          ),
+        ),
       ],
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildTabletLayout() {
     return _buildMobileLayout(); // Use mobile layout for tablet for now
@@ -583,8 +531,8 @@ String? _otpError;
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      _showOTPStep 
-                          ? context.t('auth.otp.subtitle')
+                      _emailSent 
+                          ? context.t('auth.emailVerification.subtitle')
                           : context.t('auth.signUp.subtitle'),
                       style: const TextStyle(
                         fontSize: 20,
@@ -603,9 +551,9 @@ String? _otpError;
             child: Center(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(48),
-                child: SizedBox(
-                  width: 400,
-                  child: _showOTPStep ? _buildDesktopOTPForm() : _buildDesktopSignUpForm(),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 500),
+                  child: _emailSent ? _buildEmailVerificationMessage() : _buildDesktopSignUpForm(),
                 ),
               ),
             ),
@@ -672,18 +620,23 @@ String? _otpError;
           BlocConsumer<AuthBloc, AuthState>(
             listener: (context, state) {
               if (state is AuthError) {
-                AppAlerts.showAlert(context, 'Error', state.message);
-              } else if (state is AuthOTPSent) {
+                AppAlerts.showAlert(context, context.t('common.error'), state.message);
+              } else if (state is AuthEmailVerificationSent) {
                 setState(() {
-                  _showOTPStep = true;
+                  _emailSent = true;
                 });
                 _startResendTimer();
                 AppAlerts.showSnackbar(
                   context,
-                  context.t('auth.otp.sent'),
+                  context.t('auth.emailVerification.sent'),
                   color: AppTheme.successColor,
                 );
               } else if (state is AuthAuthenticated) {
+                AppAlerts.showSnackbar(
+                  context,
+                  context.t('auth.signUp.success'),
+                  color: AppTheme.successColor,
+                );
                 context.go('/');
               }
             },
@@ -693,7 +646,7 @@ String? _otpError;
                 onPressed: _isLoading ? null : _submitForm,
                 text: _isLoading
                     ? context.t('common.loading')
-                    : context.t('auth.signUp.sendOTP'),
+                    : context.t('auth.signUp.sendVerification'),
                 isLoading: _isLoading,
               );
             },
@@ -727,143 +680,6 @@ String? _otpError;
     );
   }
 
-Widget _buildDesktopOTPForm() {
-  return Form(
-    key: _otpFormKey,
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // Back button
-        Align(
-          alignment: Alignment.centerLeft,
-          child: IconButton(
-            onPressed: _goBackToSignUp,
-            icon: const Icon(HugeIcons.strokeRoundedArrowLeft01),
-            color: AppTheme.primaryColor,
-          ),
-        ),
-        const SizedBox(height: 8),
-        const Icon(
-          HugeIcons.strokeRoundedMail01,
-          size: 80,
-          color: AppTheme.primaryColor,
-        ),
-        const SizedBox(height: 24),
-        Text(
-          context.t('auth.otp.title'),
-          style: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-            color: AppTheme.primaryColor,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 16),
-        Text(
-          context.t('auth.otp.description', {'email': _pendingEmail}),
-          style: TextStyle(
-            fontSize: 16,
-            color: AppTheme.neutral600,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 40),
-        // Modern OTP Input Field
-        OTPInputField(
-          key: _otpFieldKey,
-          length: 6,
-          errorText: _otpError,
-          enabled: !_isLoading,
-          onChanged: (otp) {
-            // Clear error when user starts typing
-            if (_otpError != null) {
-              setState(() {
-                _otpError = null;
-              });
-            }
-          },
-          onCompleted: (otp) {
-            _otpController.text = otp;
-            // Auto-verify when complete
-            _verifyOTP();
-          },
-        ),
-        const SizedBox(height: 32),
-        BlocConsumer<AuthBloc, AuthState>(
-          listener: (context, state) {
-            if (state is AuthError) {
-              setState(() {
-                _otpError = state.message;
-              });
-              _otpFieldKey.currentState?.clearOTP();
-              AppAlerts.showAlert(context, 'Error', state.message);
-            } else if (state is AuthOTPSent) {
-              AppAlerts.showSnackbar(
-                context,
-                context.t('auth.otp.resent'),
-                color: AppTheme.successColor,
-              );
-            } else if (state is AuthAuthenticated) {
-              AppAlerts.showSnackbar(
-                context,
-                context.t('auth.signUp.success'),
-                color: AppTheme.successColor,
-              );
-              context.go('/');
-            }
-          },
-          builder: (context, state) {
-            _isLoading = state is AuthLoading;
-            return CustomButton(
-              onPressed: _isLoading ? null : () {
-                final otp = _otpFieldKey.otpValue;
-                if (otp.length == 6) {
-                  _otpController.text = otp;
-                  _verifyOTP();
-                } else {
-                  setState(() {
-                    _otpError = context.t('auth.otp.invalid');
-                  });
-                }
-              },
-              text: _isLoading
-                  ? context.t('common.loading')
-                  : context.t('auth.otp.verify'),
-              isLoading: _isLoading,
-            );
-          },
-        ),
-        const SizedBox(height: 28),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              context.t('auth.otp.didntReceive'),
-              style: TextStyle(
-                fontSize: 16,
-                color: AppTheme.neutral600,
-              ),
-            ),
-            TextButton(
-              onPressed: _resendTimer > 0 ? null : _resendOTP,
-              child: Text(
-                _resendTimer > 0 
-                    ? '${context.t('auth.otp.resend')} (${_resendTimer}s)'
-                    : context.t('auth.otp.resend'),
-                style: TextStyle(
-                  color: _resendTimer > 0 ? AppTheme.neutral500 : AppTheme.primaryColor,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    ),
-  );
-  
-}
 
 }
 

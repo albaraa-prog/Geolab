@@ -46,7 +46,7 @@ class ImageCaptured extends RockClassificationState {
 }
 
 class Classifying extends RockClassificationState {
-  final io.File image;
+  final io.File? image; // Nullable for web (bytes-based)
 
   const Classifying(this.image);
 
@@ -57,13 +57,13 @@ class Classifying extends RockClassificationState {
 class ClassificationComplete extends RockClassificationState {
   final String rockType;
   final double confidence;
-  final io.File image;
+  final io.File? image; // Nullable for web (bytes-based)
   final Map<String, dynamic>? additionalData;
 
   const ClassificationComplete({
     required this.rockType,
     required this.confidence,
-    required this.image,
+    this.image, // Can be null for web
     this.additionalData,
   });
 

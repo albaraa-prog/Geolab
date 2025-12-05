@@ -35,7 +35,8 @@
     "settings": "Settings",
     "searchHistory": "Search History",
     "historyItem": "History Item",
-    "historyPreview": "Response preview for item"
+    "historyPreview": "Response preview for item",
+    "historyEmpty": "No classification history yet"
   },
   "camera": {
     "permissionRequired": "Camera permission is required",
@@ -48,20 +49,30 @@
     "positionRock": "Position rock within frame",
     "remove": "Remove",
     "save": "Save",
-    "selectImage": "Select an image"
+    "selectImage": "Select an image",
+    "dragDropTitle": "Drag & Drop Image",
+    "dragDropSubtitle": "or click to browse",
+    "dragDropDescription": "Drop your rock image here to classify it",
+    "browseFiles": "Browse Files",
+    "unsupportedFile": "Unsupported file type. Please select an image file.",
+    "fileTooLarge": "File is too large. Maximum size is 10MB."
   },
   "auth": {
     "signIn": {
       "title": "Sign In",
       "subtitle": "Sign in to your account",
-      "button": "Sign In"
+      "button": "Sign In",
+      "usePassword": "Sign in with Password",
+      "useMagicLink": "Sign in with Email Link",
+      "or": "OR"
     },
     "signUp": {
       "title": "Sign Up",
       "subtitle": "Create your account",
-      "button": "Sign Up"
+      "button": "Sign Up",
+      "sendVerification": "Send Verification Email",
+      "success": "Account created successfully"
     },
-    
     "email": "Email",
     "password": "Password",
     "confirmPassword": "Confirm Password",
@@ -77,22 +88,26 @@
     "resetPassword": {
       "title": "Reset Password",
       "description": "Enter your email address and we'll send you a link to reset your password.",
+      "setNewPassword": "Please set your new password",
+      "updatePassword": "Update Password",
+      "passwordUpdated": "Password updated successfully!",
+      "redirecting": "Redirecting to sign in...",
+      "backToSignIn": "Back to Sign In",
+      "verifying": "Verifying reset link...",
       "cancel": "Cancel",
       "send": "Send",
       "success": "Password reset link sent successfully"
     },
-    "otp": {
+    "emailVerification": {
       "title": "Verify Your Email",
-      "subtitle": "We've sent you a verification code",
-      "description": "Please enter the 6-digit code we sent to {email}",
-      "label": "Verification Code",
-      "verify": "Verify & Create Account",
-      "sent": "Verification code sent to your email",
-      "resent": "Verification code resent",
-      "didntReceive": "Didn't receive the code?",
-      "resend": "Resend",
-      "required": "Verification code is required",
-      "invalid": "Please enter a valid 6-digit code"
+      "subtitle": "Check your email",
+      "description": "We've sent a verification link to {email}. Please click the link in the email to verify your account.",
+      "sent": "Verification email sent successfully. Please check your inbox.",
+      "resent": "Verification email resent successfully",
+      "didntReceive": "Didn't receive the email?",
+      "resend": "Resend Email",
+      "checkSpam": "Please check your spam folder if you don't see the email",
+      "success": "Email verified successfully"
     },
     "error": {
       "passwordsDoNotMatch": "Passwords do not match",
@@ -165,6 +180,8 @@
   "rockClassification": {
     "title": "Rock Classification",
     "analyzing": "Analyzing rock...",
+    "classify": "Classify",
+    "classifying": "Classifying...",
     "result": "Rock Classification Result",
     "confidence": "Confidence",
     "description": "Rock Description",

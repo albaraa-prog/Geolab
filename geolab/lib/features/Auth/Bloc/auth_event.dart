@@ -35,43 +35,39 @@ class AuthRegisterRequested extends AuthEvent {
   List<Object?> get props => [email, password, subscriptionTier];
 }
 
-class AuthSendOTPRequested extends AuthEvent {
-  final String email;
-
-  const AuthSendOTPRequested({required this.email});
-
-  @override
-  List<Object?> get props => [email];
-}
-
-class AuthResendOTPRequested extends AuthEvent {
-  final String email;
-
-  const AuthResendOTPRequested({required this.email});
-
-  @override
-  List<Object?> get props => [email];
-}
-
-class AuthVerifyOTPAndRegister extends AuthEvent {
+class AuthSendEmailVerificationRequested extends AuthEvent {
   final String email;
   final String name;
   final String password;
-  final String otp;
-  final String subscriptionTier;
 
-  const AuthVerifyOTPAndRegister({
+  const AuthSendEmailVerificationRequested({
     required this.email,
     required this.name,
     required this.password,
-    required this.otp,
-    required this.subscriptionTier,
   });
 
   @override
-  List<Object?> get props => [email, name, password, otp, subscriptionTier];
+  List<Object?> get props => [email, name, password];
+}
+
+class AuthResendEmailVerificationRequested extends AuthEvent {
+  final String email;
+
+  const AuthResendEmailVerificationRequested({required this.email});
+
+  @override
+  List<Object?> get props => [email];
 }
 
 class AuthLogoutRequested extends AuthEvent {}
 
 class AuthCheckRequested extends AuthEvent {}
+
+class AuthPasswordResetRequested extends AuthEvent {
+  final String email;
+
+  const AuthPasswordResetRequested({required this.email});
+
+  @override
+  List<Object?> get props => [email];
+}

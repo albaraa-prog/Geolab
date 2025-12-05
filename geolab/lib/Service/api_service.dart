@@ -1,6 +1,8 @@
 import 'dart:io' as io;
+import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:geolab/config/app_config.dart';
 import 'package:geolab/constants/auth_constants.dart';
@@ -9,11 +11,12 @@ import 'package:geolab/models/prediction_model.dart';
 import 'package:geolab/models/subscription_model.dart';
 import 'package:geolab/models/user_model.dart';
 import 'package:geolab/Service/network_service.dart';
-import 'package:http_parser/http_parser.dart' show MediaType;
+import 'package:geolab/Service/supabase_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ApiService {
   // Use configuration from AppConfig
-  static const String baseUrl = AppConfig.baseUrl;
+  static String get baseUrl => AppConfig.baseUrl;
 
   final Dio _dio = Dio();
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
@@ -38,13 +41,67 @@ class ApiService {
         // Add common headers
         options.headers['Accept'] = 'application/json';
         options.headers['Content-Type'] = 'application/json';
+        
+        // Initialize retry count if not present
+        options.extra['retryCount'] = options.extra['retryCount'] ?? 0;
 
         handler.next(options);
       },
       onError: (error, handler) async {
-        // Handle 401 errors by clearing token and redirecting to login
+        // Handle 401 errors by clearing token
         if (error.response?.statusCode == 401) {
           await _deleteToken();
+          handler.next(error);
+          return;
+        }
+
+        // SECURITY FIX: Retry logic for network errors and 5xx errors
+        final retryCount = error.requestOptions.extra['retryCount'] ?? 0;
+        final maxRetries = AppConfig.maxRetries;
+        
+        // Check if we should retry
+        bool shouldRetry = false;
+        if (retryCount < maxRetries) {
+          // Retry on network errors
+          if (error.type == DioExceptionType.connectionTimeout ||
+              error.type == DioExceptionType.receiveTimeout ||
+              error.type == DioExceptionType.sendTimeout ||
+              error.type == DioExceptionType.connectionError) {
+            shouldRetry = true;
+          }
+          // Retry on 5xx server errors
+          else if (error.response?.statusCode != null &&
+                   error.response!.statusCode! >= 500 &&
+                   error.response!.statusCode! < 600) {
+            shouldRetry = true;
+          }
+          // Retry on 429 (rate limit) with backoff
+          else if (error.response?.statusCode == 429) {
+            shouldRetry = true;
+          }
+        }
+        
+        if (shouldRetry) {
+          // Exponential backoff: 2^retryCount seconds
+          final delaySeconds = (1 << retryCount).clamp(1, 10);
+          await Future.delayed(Duration(seconds: delaySeconds));
+          
+          // Increment retry count
+          error.requestOptions.extra['retryCount'] = retryCount + 1;
+          
+          print('Retrying request (attempt ${retryCount + 1}/$maxRetries) after ${delaySeconds}s delay');
+          
+          try {
+            // Retry the request
+            final response = await _dio.fetch(error.requestOptions);
+            handler.resolve(response);
+            return;
+          } catch (e) {
+            // If retry also fails, continue with error handling
+            if (e is DioException) {
+              error = e;
+            }
+          }
         }
 
         print('API Error: ${error.message}');
@@ -59,16 +116,32 @@ class ApiService {
         const Duration(seconds: AppConfig.sendTimeoutSeconds);
   }
 
-  // Token management methods
+  // Token management methods (now using Supabase)
   Future<String?> _getToken() async {
-    return await _storage.read(key: AuthConstants.tokenKey);
+    if (!SupabaseService.isInitialized) {
+      return null;
+    }
+    try {
+      // Get Supabase session token
+      final client = SupabaseService.client;
+      if (client == null) {
+        return null;
+      }
+      final session = client.auth.currentSession;
+      return session?.accessToken;
+    } catch (e) {
+      return null;
+    }
   }
 
   Future<void> _saveToken(String token) async {
+    // Token is automatically managed by Supabase
+    // Keep this for backward compatibility
     await _storage.write(key: AuthConstants.tokenKey, value: token);
   }
 
   Future<void> _deleteToken() async {
+    // Supabase handles token deletion on signOut
     await _storage.delete(key: AuthConstants.tokenKey);
   }
 
@@ -82,49 +155,88 @@ class ApiService {
 
   
 
-  Future<Map<String, dynamic>> login({
+  // Supabase Email Verification (Magic Link) Authentication
+  Future<void> sendEmailVerification({
+    required String email,
+    String? name,
+    String? password,
+  }) async {
+    try {
+      await _checkConnectivity();
+      // For web, construct redirect URL
+      String? redirectTo;
+      if (kIsWeb) {
+        redirectTo = '${Uri.base.origin}/';
+      }
+      await SupabaseService.sendEmailVerification(
+        email: email,
+        redirectTo: redirectTo,
+      );
+    } catch (e) {
+      throw Exception('Failed to send verification email: ${e.toString()}');
+    }
+  }
+
+  // Password-based authentication
+  Future<Map<String, dynamic>> loginWithPassword({
     required String email,
     required String password,
   }) async {
     try {
       await _checkConnectivity();
-      
-      final response = await _dio.post(
-        '$baseUrl/user/login',
-        data: {
-          'email': email,
-          'password': password,
-        },
+      final authResponse = await SupabaseService.signInWithPassword(
+        email: email,
+        password: password,
       );
-
-      if (response.statusCode == 200) {
-        final token = response.data['access_token'];
+      
+      if (authResponse.user != null) {
+        final token = authResponse.session?.accessToken;
         if (token != null) {
           await _saveToken(token);
         }
-        return response.data;
+        
+        final user = authResponse.user!;
+        final userMetadata = user.userMetadata ?? {};
+        
+        return {
+          'access_token': token,
+          'user': {
+            'id': user.id,
+            'email': user.email,
+            'subscription_tier': userMetadata['subscription_tier'] ?? 'free',
+          },
+        };
       }
-
+      
       throw Exception('Login failed');
-    } on DioException catch (e) {
-      throw _handleDioError(e);
+    } catch (e) {
+      throw Exception('Failed to login: ${e.toString()}');
     }
+  }
+
+  // Password reset
+  Future<void> resetPassword(String email) async {
+    try {
+      await _checkConnectivity();
+      await SupabaseService.resetPassword(email: email);
+    } catch (e) {
+      throw Exception('Failed to send password reset email: ${e.toString()}');
+    }
+  }
+
+  // Login method - supports both password and email verification
+  Future<Map<String, dynamic>> login({
+    required String email,
+    required String password,
+  }) async {
+    return await loginWithPassword(email: email, password: password);
   }
 
   Future<void> logout() async {
     try {
-      final token = await _getToken();
-      if (token != null) {
-        await _dio.post(
-          '$baseUrl/user/logout',
-          options: Options(
-            headers: {'Authorization': 'Bearer $token'},
-          ),
-        );
-      }
+      await SupabaseService.signOut();
     } catch (e) {
-      // Continue with logout even if API call fails
-      print('Logout API call failed: $e');
+      print('Logout failed: $e');
     } finally {
       await _deleteToken();
     }
@@ -132,24 +244,45 @@ class ApiService {
 
   Future<UserModel?> getCurrentUser() async {
     try {
-      final token = await _getToken();
-      if (token == null) return null;
+      final user = SupabaseService.currentUser;
+      if (user == null) return null;
+      
+      // Get user profile from Supabase
+      final userMetadata = user.userMetadata ?? {};
+      final subscriptionTier = userMetadata['subscription_tier'] ?? 'free';
+      
+      // Get daily limit based on subscription tier
+      int dailyLimit = 5; // Default for free tier
+      if (subscriptionTier == 'premium') {
+        dailyLimit = 1000;
+      } else if (subscriptionTier == 'enterprise') {
+        dailyLimit = 10000;
+      }
+      
+      // Parse DateTime from ISO string format
+      final createdAt = DateTime.tryParse(user.createdAt.toString()) ?? DateTime.now();
+      final lastLogin = user.lastSignInAt != null 
+          ? DateTime.tryParse(user.lastSignInAt.toString())
+          : null;
+      
+      // Get name from user metadata or user metadata
+      final name = userMetadata['name'] ?? 
+                   userMetadata['full_name'] ?? 
+                   userMetadata['fullName'] ??
+                   user.userMetadata?['name'];
 
-      final response = await _dio.get(
-        '$baseUrl/user/profile',
-        options: Options(
-          headers: {'Authorization': 'Bearer $token'},
-        ),
+      return UserModel(
+        id: user.id,
+        email: user.email ?? '',
+        name: name,
+        subscriptionTier: subscriptionTier,
+        requestCount: (userMetadata['request_count'] as int?) ?? 0,
+        dailyLimit: (userMetadata['daily_limit'] as int?) ?? dailyLimit,
+        createdAt: createdAt,
+        lastLogin: lastLogin,
       );
-
-      if (response.statusCode == 200) {
-        return UserModel.fromJson(response.data['user']);
-      }
-      return null;
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
-        await _deleteToken();
-      }
+    } catch (e) {
+      print('Error getting current user: $e');
       return null;
     }
   }
@@ -159,30 +292,65 @@ class ApiService {
     try {
       await _checkConnectivity();
       
-      print('Sending image: ${imageFile.path}');
+      // SECURITY FIX: Validate image before processing
+      if (!await imageFile.exists()) {
+        throw Exception('Image file does not exist');
+      }
+      
+      // Check file size
+      final fileSize = await imageFile.length();
+      if (fileSize > AppConfig.maxImageSizeBytes) {
+        throw Exception(
+          'Image size too large. Maximum size: ${AppConfig.maxImageSizeBytes / (1024 * 1024)}MB'
+        );
+      }
+      
+      if (fileSize == 0) {
+        throw Exception('Image file is empty');
+      }
+      
+      // Validate file extension
+      final fileName = imageFile.path.toLowerCase();
+      final hasValidExtension = AppConfig.allowedImageTypes.any(
+        (ext) => fileName.endsWith('.$ext')
+      );
+      if (!hasValidExtension) {
+        throw Exception(
+          'Invalid image type. Allowed types: ${AppConfig.allowedImageTypes.join(", ")}'
+        );
+      }
+      
+      print('Uploading image to Supabase Storage: ${imageFile.path}');
 
+      final user = SupabaseService.currentUser;
+      if (user == null) {
+        throw Exception('Authentication required');
+      }
+
+      // Step 1: Upload image to Supabase Storage
+      final imageUrl = await SupabaseService.uploadImage(
+        userId: user.id,
+        imageFile: imageFile,
+      );
+      
+      print('Image uploaded to Supabase Storage: $imageUrl');
+
+      // Step 2: Send image URL to Flask API for ML prediction
       final token = await _getToken();
       if (token == null) {
         throw Exception('Authentication required');
       }
 
-      final formData = FormData.fromMap({
-        'image': await MultipartFile.fromFile(
-          imageFile.path,
-          filename: imageFile.path.split('/').last,
-          contentType: MediaType('image', 'jpeg'),
-        ),
-      });
-
-      print('FormData created');
-
       final response = await _dio.post(
         '$baseUrl/predict',
-        data: formData,
+        data: {
+          'image_url': imageUrl,
+          'user_id': user.id,
+        },
         options: Options(
-          contentType: 'multipart/form-data',
           headers: {
             'Accept': 'application/json',
+            'Content-Type': 'application/json',
             'Authorization': 'Bearer $token',
           },
           validateStatus: (status) {
@@ -214,6 +382,101 @@ class ApiService {
           'Prediction failed with status ${response.statusCode}');
     } catch (e) {
       print('Error in predictRockType: $e');
+      rethrow;
+    }
+  }
+
+  /// Predict rock type from image bytes (for web)
+  Future<PredictionModel> predictRockTypeFromBytes(Uint8List imageBytes, String fileName) async {
+    try {
+      await _checkConnectivity();
+      
+      // SECURITY FIX: Validate image bytes before processing
+      if (imageBytes.isEmpty) {
+        throw Exception('Image data is empty');
+      }
+      
+      // Check file size
+      if (imageBytes.length > AppConfig.maxImageSizeBytes) {
+        throw Exception(
+          'Image size too large. Maximum size: ${AppConfig.maxImageSizeBytes / (1024 * 1024)}MB'
+        );
+      }
+      
+      // Validate file extension
+      final fileNameLower = fileName.toLowerCase();
+      final hasValidExtension = AppConfig.allowedImageTypes.any(
+        (ext) => fileNameLower.endsWith('.$ext')
+      );
+      if (!hasValidExtension) {
+        throw Exception(
+          'Invalid image type. Allowed types: ${AppConfig.allowedImageTypes.join(", ")}'
+        );
+      }
+      
+      print('Uploading image bytes to Supabase Storage: $fileName');
+
+      final user = SupabaseService.currentUser;
+      if (user == null) {
+        throw Exception('Authentication required');
+      }
+
+      // Step 1: Upload image bytes to Supabase Storage
+      final imageUrl = await SupabaseService.uploadImageBytes(
+        userId: user.id,
+        imageBytes: imageBytes,
+        fileName: fileName,
+      );
+      
+      print('Image uploaded to Supabase Storage: $imageUrl');
+
+      // Step 2: Send image URL to Flask API for ML prediction
+      final token = await _getToken();
+      if (token == null) {
+        throw Exception('Authentication required');
+      }
+
+      final response = await _dio.post(
+        '$baseUrl/predict',
+        data: {
+          'image_url': imageUrl,
+          'user_id': user.id,
+        },
+        options: Options(
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          validateStatus: (status) {
+            print('Response status: $status');
+            return status! < 500;
+          },
+        ),
+      );
+
+      print('Response: ${response.data}');
+
+      if (response.statusCode == 200 && response.data != null) {
+        try {
+          return PredictionModel.fromJson(response.data);
+        } catch (e) {
+          print('Error parsing response: $e');
+          print('Response data: ${response.data}');
+          throw Exception('Failed to parse prediction result');
+        }
+      }
+
+      // Handle specific error cases
+      if (response.statusCode == 422) {
+        final errorMsg = response.data?['error'] ?? 'Image processing failed';
+        throw Exception('Classification error: $errorMsg');
+      }
+
+      throw Exception(response.data?['error'] ??
+          'Prediction failed with status ${response.statusCode}');
+    } catch (e) {
+      print('Error in predictRockTypeFromBytes: $e');
       rethrow;
     }
   }
@@ -522,8 +785,23 @@ class ApiService {
 
   // Utility Methods
   Future<bool> isAuthenticated() async {
-    final token = await _storage.read(key: AuthConstants.tokenKey);
-    return token != null;
+    try {
+      // First try to get from Supabase (if initialized)
+      final user = SupabaseService.currentUser;
+      if (user != null) {
+        return true;
+      }
+      // Fallback to checking stored token
+      final token = await _storage.read(key: AuthConstants.tokenKey);
+      return token != null;
+    } catch (e) {
+      // If Supabase not initialized, just check stored token
+      if (e.toString().contains('not been initialized')) {
+        final token = await _storage.read(key: AuthConstants.tokenKey);
+        return token != null;
+      }
+      return false;
+    }
   }
 
   Future<String?> getAuthToken() async {
@@ -531,8 +809,9 @@ class ApiService {
   }
 
   
-  // OTP Methods for Email Verification
-  Future<Map<String, dynamic>> sendOTP({
+  // OTP Methods for Email Verification (Backend API versions)
+  // Note: These methods call the backend API, while sendOTP() and verifyOTP() above use Supabase directly
+  Future<Map<String, dynamic>> sendOTPViaBackend({
     required String email,
   }) async {
     try {
@@ -557,6 +836,8 @@ class ApiService {
     required String email,
   }) async {
     try {
+      await _checkConnectivity();
+      
       final response = await _dio.post(
         '$baseUrl/user/send-signup-otp',
         data: {
@@ -570,7 +851,9 @@ class ApiService {
 
       throw Exception('Failed to send signup OTP');
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw Exception(_handleDioError(e));
+    } catch (e) {
+      throw Exception(e.toString());
     }
   }
 
@@ -578,6 +861,8 @@ class ApiService {
     required String email,
   }) async {
     try {
+      await _checkConnectivity();
+      
       final response = await _dio.post(
         '$baseUrl/user/resend-otp',
         data: {
@@ -591,7 +876,9 @@ class ApiService {
 
       throw Exception('Failed to resend OTP');
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw Exception(_handleDioError(e));
+    } catch (e) {
+      throw Exception(e.toString());
     }
   }
 
@@ -603,6 +890,8 @@ class ApiService {
     required String subscriptionTier,
   }) async {
     try {
+      await _checkConnectivity();
+      
       final response = await _dio.post(
         '$baseUrl/user/verify-otp-register',
         data: {
@@ -624,12 +913,15 @@ class ApiService {
 
       throw Exception('OTP verification or registration failed');
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw Exception(_handleDioError(e));
+    } catch (e) {
+      throw Exception(e.toString());
     }
   }
 
-  // Alternative method if you want to separate verification from registration
-  Future<Map<String, dynamic>> verifyOTP({
+  // Alternative method if you want to separate verification from registration (Backend API version)
+  // Note: This method calls the backend API, while verifyOTP() above uses Supabase directly
+  Future<Map<String, dynamic>> verifyOTPViaBackend({
     required String email,
     required String otp,
   }) async {

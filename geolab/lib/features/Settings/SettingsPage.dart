@@ -71,7 +71,10 @@ class SettingsPage extends StatelessWidget {
           builder: (context, authState) {
             final isAuthed = authState is AuthAuthenticated;
             final userEmail = isAuthed ? authState.user.email : '';
-            final userName = isAuthed ? authState.user.email.split('@')[0] : '';
+            // Get name from user model, fallback to email prefix if not available
+            final userName = isAuthed 
+                ? (authState.user.name ?? userEmail.split('@')[0])
+                : '';
             final fallbackTitle =
                 localizationService.translate('settings.profile.title');
             final fallbackSubtitle =

@@ -9,13 +9,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolab/Service/theme_service.dart';
 import 'package:geolab/features/Home/components/MyCircleButton.dart';
 import 'package:geolab/features/Home/components/MyDrawer.dart';
+import 'package:geolab/features/Home/components/FileDropZone.dart';
 import 'package:geolab/features/RockClassification/Bloc/rock_classification_bloc.dart';
 import 'package:geolab/features/RockClassification/Bloc/rock_classification_event.dart';
 import 'package:geolab/features/RockClassification/Bloc/rock_classification_state.dart';
 import 'package:geolab/utils/app_localizations.dart';
 import 'package:geolab/utils/responsive_layout.dart';
 import 'package:geolab/utils/rtl_wrapper.dart';
-import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
@@ -46,6 +46,7 @@ class _HomePageState extends State<HomePage> {
   // Image state
   io.File? _capturedImage;
   Uint8List? _capturedImageBytes;
+  bool _isClassificationComplete = false;
 
   // Lifecycle state
   bool _isDisposed = false;
@@ -185,8 +186,8 @@ class _HomePageState extends State<HomePage> {
         setState(() {
           _capturedImage = image;
           _isTakingPicture = false;
+          _isClassificationComplete = false;
         });
-        _classifyImage(image);
       }
     } catch (e) {
       if (mounted && !_isDisposed) {
@@ -210,21 +211,33 @@ class _HomePageState extends State<HomePage> {
 
       if (kIsWeb) {
         final bytes = await image.readAsBytes();
-        setState(() {
-          _capturedImageBytes = bytes;
-          _capturedImage = null;
-        });
-        // TODO: Implement web image classification
+        _handleWebFileSelected(bytes, image.name);
       } else {
         final imageFile = io.File(image.path);
         setState(() {
           _capturedImage = imageFile;
           _capturedImageBytes = null;
+          _isClassificationComplete = false;
         });
-        _classifyImage(imageFile);
       }
     } catch (e) {
       _showErrorMessage('${context.t('camera.error')}: $e');
+    }
+  }
+
+  void _handleWebFileSelected(Uint8List bytes, String fileName) {
+    setState(() {
+      _capturedImageBytes = bytes;
+      _capturedImage = null;
+      _isClassificationComplete = false;
+    });
+  }
+
+  void _classifyWebImage(Uint8List bytes) {
+    try {
+      context.read<RockClassificationBloc>().add(ClassifyRockFromBytes(bytes, fileName: 'rock_image.jpg'));
+    } catch (e) {
+      _showErrorMessage('Error starting classification: $e');
     }
   }
 
@@ -312,6 +325,7 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _capturedImage = null;
       _capturedImageBytes = null;
+      _isClassificationComplete = false;
     });
   }
 
@@ -414,6 +428,9 @@ class _HomePageState extends State<HomePage> {
 
   void _handleClassificationState(BuildContext context, RockClassificationState state) {
     if (state is ClassificationComplete) {
+      setState(() {
+        _isClassificationComplete = true;
+      });
       _showClassificationResult(state);
     } else if (state is ClassificationError) {
       _showClassificationError(state);
@@ -434,15 +451,54 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildDesktopLayout() {
-    return Row(
-      children: [
-        _buildDesktopSidebar(),
-        Expanded(child: _buildMobileLayout()),
-      ],
-    );
+    // Use mobile layout with drawer (same as mobile/tablet)
+    return _buildMobileLayout();
   }
 
   Widget _buildCameraPreview() {
+    // On web, show file drop zone or image preview
+    if (kIsWeb) {
+      // If we have an image, show preview instead of drop zone
+      if (_hasImage) {
+        return Container(
+          color: _themeService.backgroundColor,
+          child: Center(
+            child: Container(
+              width: 400,
+              height: 400,
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: _themeService.primaryColor,
+                  width: 2,
+                ),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: _capturedImageBytes != null
+                    ? Image.memory(_capturedImageBytes!, fit: BoxFit.contain)
+                    : _capturedImage != null
+                        ? Image.file(_capturedImage!, fit: BoxFit.contain)
+                        : const SizedBox(),
+              ),
+            ),
+          ),
+        );
+      }
+      
+      // Show drop zone when no image
+      return Container(
+        color: _themeService.backgroundColor,
+        child: Center(
+          child: FileDropZone(
+            width: 400,
+            height: 400,
+            onFileSelected: _handleWebFileSelected,
+          ),
+        ),
+      );
+    }
+
     if (!_hasValidCamera) {
       return _buildLoadingView();
     }
@@ -489,6 +545,26 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildOverlay() {
+    // On web, show simplified overlay
+    if (kIsWeb) {
+      return Positioned.fill(
+        child: Column(
+          children: [
+            _buildTopBar(),
+            // Spacer to center content
+            const Spacer(),
+            // Show image actions (remove/save) when image is selected
+            if (_hasImage) _buildImageActions(),
+            // Bottom controls are hidden on web (returns SizedBox.shrink)
+            _buildBottomControls(),
+            // Extra spacer at bottom for better centering
+            const Spacer(),
+          ],
+        ),
+      );
+    }
+    
+    // Mobile/tablet layout with capture area
     return Positioned.fill(
       child: Column(
         children: [
@@ -583,11 +659,16 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildCaptureArea() {
+    // On web, this is not used (FileDropZone handles its own styling)
+    if (kIsWeb) {
+      return const SizedBox.shrink();
+    }
+    
     return Expanded(
       child: Center(
         child: Container(
-          width: ResponsiveLayout.isWeb(context) ? 400 : 350,
-          height: ResponsiveLayout.isWeb(context) ? 400 : 350,
+          width: 350,
+          height: 350,
           decoration: BoxDecoration(
             border: Border.all(
               color: _themeService.primaryColor,
@@ -677,20 +758,83 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           const SizedBox(width: 24),
-          TextButton.icon(
-            onPressed: _saveCapturedImage,
-            icon: Icon(Icons.save_alt, color: _themeService.onSurfaceColor),
-            label: Text(
-              context.t('camera.save'),
-              style: TextStyle(color: _themeService.onSurfaceColor, fontSize: 16),
+          // Show classify button if not classified yet
+          if (!_isClassificationComplete)
+            _buildClassifyButton()
+          // Show save button only after classification is complete
+          else
+            TextButton.icon(
+              onPressed: _saveCapturedImage,
+              icon: Icon(Icons.save_alt, color: _themeService.onSurfaceColor),
+              label: Text(
+                context.t('camera.save'),
+                style: TextStyle(color: _themeService.onSurfaceColor, fontSize: 16),
+              ),
             ),
-          ),
         ],
       ),
     );
   }
 
+  Widget _buildClassifyButton() {
+    return BlocBuilder<RockClassificationBloc, RockClassificationState>(
+      builder: (context, state) {
+        final isClassifying = state is Classifying;
+        
+        return ElevatedButton.icon(
+          onPressed: isClassifying ? null : _handleClassifyButtonPressed,
+          icon: isClassifying
+              ? SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(_themeService.onSurfaceColor),
+                  ),
+                )
+              : Icon(
+                  Icons.auto_awesome,
+                  color: _themeService.onSurfaceColor,
+                  size: 20,
+                ),
+          label: Text(
+            isClassifying ? context.t('rockClassification.classifying') : context.t('rockClassification.classify'),
+            style: TextStyle(
+              color: _themeService.onSurfaceColor,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: _themeService.primaryColor,
+            foregroundColor: _themeService.onSurfaceColor,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            elevation: 2,
+            disabledBackgroundColor: _themeService.primaryColor.withOpacity(0.6),
+          ),
+        );
+      },
+    );
+  }
+
+  void _handleClassifyButtonPressed() {
+    if (kIsWeb && _capturedImageBytes != null) {
+      _classifyWebImage(_capturedImageBytes!);
+    } else if (_capturedImage != null) {
+      _classifyImage(_capturedImage!);
+    }
+  }
+
   Widget _buildBottomControls() {
+    // On web, hide all controls (FileDropZone handles everything)
+    if (kIsWeb) {
+      return const SizedBox.shrink();
+    }
+    
+    // Mobile/tablet layout with all controls
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 32),
@@ -702,11 +846,10 @@ class _HomePageState extends State<HomePage> {
               onPressed: _pickImageFromGallery,
             ),
             _buildCaptureButton(),
-            if (!kIsWeb)
-              MyCircleButton(
-                icon: HugeIcons.strokeRoundedCamera01,
-                onPressed: _flipCamera,
-              ),
+            MyCircleButton(
+              icon: HugeIcons.strokeRoundedCamera01,
+              onPressed: _flipCamera,
+            ),
           ],
         ),
       ),
@@ -749,51 +892,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildDesktopSidebar() {
-    return Container(
-      width: 300,
-      decoration: BoxDecoration(
-        color: _themeService.surfaceColor,
-        border: Border(
-          right: BorderSide(
-            color: _themeService.dividerColor,
-            width: 1,
-          ),
-        ),
-      ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(24),
-            child: Text(
-              'Geolab',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: _themeService.primaryColor,
-              ),
-            ),
-          ),
-          ListTile(
-            leading: Icon(Icons.home, color: _themeService.primaryColor),
-            title: Text('Home', style: TextStyle(color: _themeService.textColor)),
-            onTap: () {},
-          ),
-          ListTile(
-            leading: Icon(Icons.settings, color: _themeService.primaryColor),
-            title: Text('Settings', style: TextStyle(color: _themeService.textColor)),
-            onTap: () => context.go('/settings'),
-          ),
-          const Spacer(),
-          ListTile(
-            leading: Icon(Icons.person, color: _themeService.primaryColor),
-            title: Text('Profile', style: TextStyle(color: _themeService.textColor)),
-            onTap: () => context.go('/profile'),
-          ),
-        ],
-      ),
-    );
-  }
 
   // ============================================================================
   // MODAL DIALOGS
@@ -990,44 +1088,6 @@ class _HomePageState extends State<HomePage> {
         ),
         const SizedBox(height: 16),
       ],
-    );
-  }
-
-  Widget _buildConnectivityIndicator() {
-    return GestureDetector(
-      onTap: _checkConnectivity,
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: _isConnected 
-              ? Colors.green.withOpacity(0.2)
-              : Colors.red.withOpacity(0.2),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: _isConnected ? Colors.green : Colors.red,
-            width: 1,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              _isConnected ? HugeIcons.strokeRoundedWifi01 : HugeIcons.strokeRoundedWifiOff01,
-              color: _isConnected ? Colors.green : Colors.red,
-              size: 16,
-            ),
-            const SizedBox(width: 4),
-            Text(
-              _isConnected ? 'Online' : 'Offline',
-              style: TextStyle(
-                color: _isConnected ? Colors.green : Colors.red,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

@@ -14,9 +14,23 @@ String? validatePassword(String? value) {
   if (password.isEmpty) {
     return 'Please enter your password';
   }
-  if (password.length < 6) {
-    return 'Password must be at least 6 characters';
+  // SECURITY FIX: Stronger password validation
+  if (password.length < 8) {
+    return 'Password must be at least 8 characters';
   }
+  if (!RegExp(r'[A-Z]').hasMatch(password)) {
+    return 'Password must contain at least one uppercase letter';
+  }
+  if (!RegExp(r'[a-z]').hasMatch(password)) {
+    return 'Password must contain at least one lowercase letter';
+  }
+  if (!RegExp(r'[0-9]').hasMatch(password)) {
+    return 'Password must contain at least one number';
+  }
+  // Optional: Add special character requirement
+  // if (!RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(password)) {
+  //   return 'Password must contain at least one special character';
+  // }
   return null;
 }
 

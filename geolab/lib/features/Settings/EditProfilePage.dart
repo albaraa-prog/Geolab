@@ -31,7 +31,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
   void _loadUserData() {
     final authState = context.read<AuthBloc>().state;
     if (authState is AuthAuthenticated) {
-      _nameController.text = authState.user.email.split('@')[0]; // Use email prefix as name
+      // Use actual name from user model, fallback to email prefix
+      _nameController.text = authState.user.name ?? 
+          authState.user.email.split('@')[0];
       _emailController.text = authState.user.email;
     }
   }

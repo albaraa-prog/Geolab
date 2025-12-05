@@ -104,8 +104,9 @@ class MyDrawer extends StatelessWidget {
                   final email = authState.user.email;
                   if (email.isNotEmpty) {
                     displayEmail = email;
-                    final at = email.indexOf('@');
-                    displayName = at > 0 ? email.substring(0, at) : email;
+                    // Use actual name from user model, fallback to email prefix
+                    displayName = authState.user.name ?? 
+                        (email.split('@').first);
                   }
                 }
 

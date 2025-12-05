@@ -6,6 +6,7 @@
 class UserModel {
   final String id;
   final String email;
+  final String? name; // Add name field
   final String subscriptionTier;
   final int requestCount;
   final int dailyLimit;
@@ -15,6 +16,7 @@ class UserModel {
   UserModel({
     required this.id,
     required this.email,
+    this.name,
     required this.subscriptionTier,
     required this.requestCount,
     required this.dailyLimit,
@@ -26,6 +28,7 @@ class UserModel {
     return UserModel(
       id: json['id'] ?? '',
       email: json['email'] ?? '',
+      name: json['name'] ?? json['full_name'] ?? json['fullName'],
       subscriptionTier:
           json['subscription_tier'] ?? json['subscriptionTier'] ?? 'free',
       requestCount: (json['request_count'] ?? json['requestCount'] ?? 0) as int,
@@ -41,6 +44,7 @@ class UserModel {
   Map<String, dynamic> toJson() => {
         'id': id,
         'email': email,
+        if (name != null) 'name': name,
         'subscription_tier': subscriptionTier,
         'request_count': requestCount,
         'daily_limit': dailyLimit,
@@ -57,6 +61,7 @@ class UserModel {
   UserModel copyWith({
     String? id,
     String? email,
+    String? name,
     String? subscriptionTier,
     int? requestCount,
     int? dailyLimit,
@@ -66,6 +71,7 @@ class UserModel {
     return UserModel(
       id: id ?? this.id,
       email: email ?? this.email,
+      name: name ?? this.name,
       subscriptionTier: subscriptionTier ?? this.subscriptionTier,
       requestCount: requestCount ?? this.requestCount,
       dailyLimit: dailyLimit ?? this.dailyLimit,

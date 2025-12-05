@@ -72,7 +72,7 @@ class RockClassificationView extends StatelessWidget {
           state is ImageCaptured ? state.image : (state as Classifying).image;
       return Stack(
         children: [
-          Image.file(image, fit: BoxFit.contain),
+          Image.file(image!, fit: BoxFit.contain),
           if (state is Classifying)
             const Center(
               child: CircularProgressIndicator(color: Colors.white),

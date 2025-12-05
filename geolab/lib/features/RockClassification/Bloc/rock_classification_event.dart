@@ -1,4 +1,5 @@
 import 'dart:io' as io;
+import 'dart:typed_data';
 
 import 'package:equatable/equatable.dart';
 
@@ -22,6 +23,16 @@ class ClassifyRock extends RockClassificationEvent {
 
   @override
   List<Object?> get props => [image];
+}
+
+class ClassifyRockFromBytes extends RockClassificationEvent {
+  final Uint8List imageBytes;
+  final String fileName;
+
+  const ClassifyRockFromBytes(this.imageBytes, {this.fileName = 'image.jpg'});
+
+  @override
+  List<Object?> get props => [imageBytes, fileName];
 }
 
 class ResetClassification extends RockClassificationEvent {}

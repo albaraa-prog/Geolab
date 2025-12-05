@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolab/Service/api_service.dart';
+import 'package:geolab/Service/supabase_service.dart';
 import 'package:geolab/features/Auth/Bloc/auth_event.dart';
 import 'package:geolab/features/Auth/Bloc/auth_state.dart';
 import 'package:geolab/models/user_model.dart';
@@ -12,9 +13,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         super(AuthInitial()) {
     on<AuthLoginRequested>(_onLoginRequested);
     on<AuthRegisterRequested>(_onRegisterRequested);
-    on<AuthSendOTPRequested>(_onSendOTPRequested);
-    on<AuthResendOTPRequested>(_onResendOTPRequested);
-    on<AuthVerifyOTPAndRegister>(_onVerifyOTPAndRegister);
+    on<AuthSendEmailVerificationRequested>(_onSendEmailVerificationRequested);
+    on<AuthResendEmailVerificationRequested>(_onResendEmailVerificationRequested);
+    on<AuthPasswordResetRequested>(_onPasswordResetRequested);
     on<AuthLogoutRequested>(_onLogoutRequested);
     on<AuthCheckRequested>(_onCheckRequested);
   }
@@ -25,13 +26,20 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
     try {
-      final response = await _apiService.login(
+      final response = await _apiService.loginWithPassword(
         email: event.email,
         password: event.password,
       );
 
-      final user = UserModel.fromJson(response['user']);
-      emit(AuthAuthenticated(user: user));
+      // Get the full user model from Supabase
+      final user = await _apiService.getCurrentUser();
+      if (user != null) {
+        emit(AuthAuthenticated(user: user));
+      } else {
+        // Fallback to creating user model from response
+        final userFromResponse = UserModel.fromJson(response['user']);
+        emit(AuthAuthenticated(user: userFromResponse));
+      }
     } catch (e) {
       emit(AuthError(message: e.toString()));
     }
@@ -43,69 +51,117 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
     try {
-      final response = await _apiService.register(
+      // Use Supabase signUpWithPassword
+      final authResponse = await SupabaseService.signUpWithPassword(
         email: event.email,
         password: event.password,
-        subscriptionTier: event.subscriptionTier,
-      );
-
-      final user = UserModel.fromJson(response['user']);
-      emit(AuthAuthenticated(user: user));
-    } catch (e) {
-      emit(AuthError(message: e.toString()));
-    }
-  }
-
-  Future<void> _onSendOTPRequested(
-    AuthSendOTPRequested event,
-    Emitter<AuthState> emit,
-  ) async {
-    emit(AuthLoading());
-    try {
-      final response = await _apiService.sendSignupOTP(email: event.email);
-      emit(AuthOTPSent(
-        message: response['message'] ?? 'OTP sent successfully',
-        email: event.email,
-        otpCode: response['otp_code'], // Include OTP for testing
-      ));
-    } catch (e) {
-      emit(AuthError(message: e.toString()));
-    }
-  }
-
-  Future<void> _onResendOTPRequested(
-    AuthResendOTPRequested event,
-    Emitter<AuthState> emit,
-  ) async {
-    emit(AuthLoading());
-    try {
-      final response = await _apiService.sendSignupOTP(email: event.email);
-      emit(AuthOTPSent(
-        message: response['message'] ?? 'OTP resent successfully',
-        email: event.email,
-        otpCode: response['otp_code'], // Include OTP for testing
-      ));
-    } catch (e) {
-      emit(AuthError(message: e.toString()));
-    }
-  }
-
-  Future<void> _onVerifyOTPAndRegister(
-    AuthVerifyOTPAndRegister event,
-    Emitter<AuthState> emit,
-  ) async {
-    emit(AuthLoading());
-    try {
-      final response = await _apiService.verifyOTPAndRegister(
-        email: event.email,
-        name: event.name,
-        password: event.password,
-        otp: event.otp,
-        subscriptionTier: event.subscriptionTier,
+        data: {
+          'subscription_tier': event.subscriptionTier,
+        },
       );
       
-      final user = UserModel.fromJson(response['user']);
-      emit(AuthAuthenticated(user: user));
+      if (authResponse.user != null) {
+        // Get the full user model from Supabase
+        final user = await _apiService.getCurrentUser();
+        if (user != null) {
+          emit(AuthAuthenticated(user: user));
+        } else {
+          // Fallback
+          final userFromResponse = UserModel(
+            id: authResponse.user!.id,
+            email: authResponse.user!.email ?? '',
+            subscriptionTier: event.subscriptionTier,
+            requestCount: 0,
+            dailyLimit: 5,
+            createdAt: DateTime.now(),
+          );
+          emit(AuthAuthenticated(user: userFromResponse));
+        }
+      } else {
+        throw Exception('Registration failed');
+      }
+    } catch (e) {
+      emit(AuthError(message: e.toString()));
+    }
+  }
+
+  Future<void> _onSendEmailVerificationRequested(
+    AuthSendEmailVerificationRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    try {
+      // If this is a signup with name and password, sign up first then send verification
+      if (event.name.isNotEmpty && event.password.isNotEmpty) {
+        // Sign up with password first to create the account
+        final authResponse = await SupabaseService.signUpWithPassword(
+          email: event.email,
+          password: event.password,
+          data: {
+            'name': event.name,
+            'full_name': event.name,
+            'subscription_tier': 'free',
+          },
+        );
+        
+        // If signup successful, send verification email
+        if (authResponse.user != null) {
+          await _apiService.sendEmailVerification(
+            email: event.email,
+            name: event.name,
+            password: event.password,
+          );
+          emit(AuthEmailVerificationSent(
+            message: 'Verification email sent successfully. Please check your inbox.',
+            email: event.email,
+          ));
+        } else {
+          throw Exception('Failed to create account');
+        }
+      } else {
+        // Just send verification email for sign-in
+        await _apiService.sendEmailVerification(
+          email: event.email,
+          name: event.name,
+          password: event.password,
+        );
+        emit(AuthEmailVerificationSent(
+          message: 'Verification email sent successfully. Please check your inbox.',
+          email: event.email,
+        ));
+      }
+    } catch (e) {
+      emit(AuthError(message: e.toString()));
+    }
+  }
+
+  Future<void> _onResendEmailVerificationRequested(
+    AuthResendEmailVerificationRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    try {
+      // Resend email verification link via Supabase
+      await _apiService.sendEmailVerification(
+        email: event.email,
+      );
+      emit(AuthEmailVerificationSent(
+        message: 'Verification email resent successfully. Please check your inbox.',
+        email: event.email,
+      ));
+    } catch (e) {
+      emit(AuthError(message: e.toString()));
+    }
+  }
+
+  Future<void> _onPasswordResetRequested(
+    AuthPasswordResetRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    try {
+      await _apiService.resetPassword(event.email);
+      emit(PasswordResetSent(event.email));
     } catch (e) {
       emit(AuthError(message: e.toString()));
     }
@@ -115,6 +171,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthLogoutRequested event,
     Emitter<AuthState> emit,
   ) async {
+    // Check if already unauthenticated to prevent unnecessary logout calls
+    final currentState = state;
+    if (currentState is AuthUnauthenticated) {
+      return; // Already logged out, don't call logout again
+    }
+    
     emit(AuthLoading());
     try {
       await _apiService.logout();
@@ -133,16 +195,26 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       final isAuthenticated = await _apiService.isAuthenticated();
       if (isAuthenticated) {
-        final user = await _apiService.getCurrentUser();
-        if (user != null) {
-          emit(AuthAuthenticated(user: user));
-        } else {
-          emit(AuthUnauthenticated());
+        try {
+          final user = await _apiService.getCurrentUser();
+          if (user != null) {
+            emit(AuthAuthenticated(user: user));
+          } else {
+            emit(AuthUnauthenticated());
+          }
+        } catch (e) {
+          // If Supabase not initialized, just show unauthenticated
+          if (e.toString().contains('not been initialized')) {
+            emit(AuthUnauthenticated());
+          } else {
+            rethrow;
+          }
         }
       } else {
         emit(AuthUnauthenticated());
       }
     } catch (e) {
+      // Silently handle errors - just show unauthenticated state
       emit(AuthUnauthenticated());
     }
   }

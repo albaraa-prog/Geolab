@@ -26,6 +26,7 @@ class RockClassificationBloc
     on<CaptureImage>(_onCaptureImage);
     on<PickImageFromGallery>(_onPickImageFromGallery);
     on<ClassifyRock>(_onClassifyRock);
+    on<ClassifyRockFromBytes>(_onClassifyRockFromBytes);
     on<ResetClassification>(_onResetClassification);
   }
 
@@ -97,7 +98,7 @@ class RockClassificationBloc
     ClassifyRock event,
     Emitter<RockClassificationState> emit,
   ) async {
-    emit(Classifying(event.image));
+    emit(Classifying(event.image)); // File-based for mobile
     try {
       // Check if user is authenticated
       final isAuthenticated = await _apiService.isAuthenticated();
@@ -149,6 +150,67 @@ class RockClassificationBloc
         emit(const ClassificationError('Daily limit reached. Please upgrade your subscription or try again tomorrow.'));
       } else {
         emit(ClassificationError('Classification error: ${e.toString()}'));
+      }
+    }
+  }
+
+  Future<void> _onClassifyRockFromBytes(
+    ClassifyRockFromBytes event,
+    Emitter<RockClassificationState> emit,
+  ) async {
+    // For web, we use bytes directly
+    try {
+      // Check if user is authenticated
+      final isAuthenticated = await _apiService.isAuthenticated();
+      if (!isAuthenticated) {
+        emit(const ClassificationError(
+            'Please log in to use rock classification'));
+        return;
+      }
+
+      // Check subscription status
+      try {
+        final subscription = await _apiService.getSubscriptionStatus();
+        if (!subscription.canMakeRequests) {
+          emit(const ClassificationError(
+            'Daily limit reached. Please upgrade your subscription or try again tomorrow.',
+          ));
+          return;
+        }
+      } catch (e) {
+        // If we can't get subscription status, continue with classification
+        print('Warning: Could not verify subscription status: $e');
+      }
+
+      // Validate image size (max 10MB)
+      if (event.imageBytes.length > 10 * 1024 * 1024) {
+        emit(const ClassificationError('Image size too large. Maximum size is 10MB.'));
+        return;
+      }
+
+      final result = await _classificationService.classifyRockFromBytes(
+        event.imageBytes,
+        event.fileName,
+      );
+      
+      // For web, image is null since we don't have File objects
+      emit(ClassificationComplete(
+        rockType: result.rockType,
+        confidence: result.confidence,
+        image: null, // Web doesn't have File, so we pass null
+        additionalData: result.additionalData,
+      ));
+    } catch (e) {
+      print('Classification error: $e');
+      String errorMessage = e.toString();
+      
+      // Provide user-friendly error messages
+      if (errorMessage.contains('Image processing failed')) {
+        emit(const ClassificationError('Image processing failed. Please try a different image.'));
+      } else if (errorMessage.contains('size too large')) {
+        emit(const ClassificationError('Image size too large. Please use an image under 10MB.'));
+      } else {
+        emit(ClassificationError('Classification failed: ${errorMessage.replaceAll('Exception: ', '')}'));
       }
     }
   }
