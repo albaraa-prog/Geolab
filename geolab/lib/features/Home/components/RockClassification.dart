@@ -64,7 +64,55 @@ class RockClassificationView extends StatelessWidget {
     }
 
     if (state is CameraInitialized) {
-      return CameraPreview(state.controller);
+      return Stack(
+        children: [
+          CameraPreview(state.controller),
+          // App branding overlay at top
+          Positioned(
+            top: 20,
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+              child: Column(
+                children: [
+                  Text(
+                    'GeoLab',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black.withOpacity(0.8),
+                          offset: const Offset(0, 2),
+                          blurRadius: 4,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'AI-Powered Rock Classification',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.9),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black.withOpacity(0.6),
+                          offset: const Offset(0, 1),
+                          blurRadius: 3,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
     }
 
     if (state is ImageCaptured || state is Classifying) {
@@ -74,8 +122,89 @@ class RockClassificationView extends StatelessWidget {
         children: [
           Image.file(image!, fit: BoxFit.contain),
           if (state is Classifying)
-            const Center(
-              child: CircularProgressIndicator(color: Colors.white),
+            // Enhanced loading animation
+            Container(
+              color: Colors.black.withOpacity(0.6),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Pulsing animation container
+                    TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 0.8, end: 1.2),
+                      duration: const Duration(milliseconds: 800),
+                      builder: (context, scale, child) {
+                        return Transform.scale(
+                          scale: scale,
+                          child: Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 3,
+                            ),
+                          ),
+                        );
+                      },
+                      onEnd: () {
+                        // Restart animation (handled by TweenAnimationBuilder)
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                    // Animated text
+                    TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 0.7, end: 1.0),
+                      duration: const Duration(milliseconds: 600),
+                      builder: (context, opacity, child) {
+                        return Opacity(
+                          opacity: opacity,
+                          child: Column(
+                            children: [
+                              const Text(
+                                'Analyzing Rock Sample',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Using 3-Stage Hierarchical AI Model',
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.8),
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: const Text(
+                                  'Please wait...',
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
             ),
         ],
       );
@@ -141,9 +270,43 @@ class RockClassificationView extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          if (state is ImageCaptured ||
-              state is Classifying ||
-              state is ClassificationComplete)
+          if (state is ImageCaptured) ...[
+            // Remove/Retake Button
+            OutlinedButton.icon(
+              onPressed: () {
+                context
+                    .read<RockClassificationBloc>()
+                    .add(ResetClassification());
+              },
+              icon: const Icon(Icons.delete_outline),
+              label: const Text('Remove'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.red,
+                side: const BorderSide(color: Colors.red),
+              ),
+            ),
+            // Classify Button
+            ElevatedButton.icon(
+              onPressed: () {
+                final image = state.image;
+                if (image != null) {
+                  context
+                      .read<RockClassificationBloc>()
+                      .add(ClassifyRock(image));
+                }
+              },
+              icon: const Icon(Icons.auto_awesome),
+              label: const Text('Classify'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: themeService.primaryColor,
+                foregroundColor: themeService.onPrimaryColor,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+            ),
+          ] else if (state is Classifying) ...[
+             const Text('Processing...'),
+          ] else if (state is ClassificationComplete) ...[
             ElevatedButton.icon(
               onPressed: () {
                 context
@@ -156,8 +319,8 @@ class RockClassificationView extends StatelessWidget {
                 backgroundColor: themeService.primaryColor,
                 foregroundColor: themeService.onPrimaryColor,
               ),
-            )
-          else if (state is CameraInitialized) ...[
+            ),
+          ] else if (state is CameraInitialized) ...[
             ElevatedButton.icon(
               onPressed: () {
                 context
@@ -188,3 +351,4 @@ class RockClassificationView extends StatelessWidget {
     );
   }
 }
+

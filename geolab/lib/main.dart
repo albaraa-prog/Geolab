@@ -16,7 +16,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:geolab/Service/supabase_service.dart';
 import 'package:geolab/features/Auth/Bloc/auth_state.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -225,16 +225,22 @@ class GeolabApp extends StatelessWidget {
                   );
                 });
                 
-                return Theme(
-                  data: themeService.currentTheme,
-                  child: MediaQuery(
-                    data: MediaQuery.of(context).copyWith(
-                      // Ensure minimum text scale factor for web
-                      textScaler: TextScaler.linear(kIsWeb 
-                          ? MediaQuery.of(context).textScaleFactor.clamp(0.8, 1.2)
-                          : MediaQuery.of(context).textScaleFactor),
+                return BlocListener<AuthBloc, AuthState>(
+                  listener: (context, state) {
+                    // Force router to re-evaluate redirects on auth state change
+                    router.refresh();
+                  },
+                  child: Theme(
+                    data: themeService.currentTheme,
+                    child: MediaQuery(
+                      data: MediaQuery.of(context).copyWith(
+                        // Ensure minimum text scale factor for web
+                        textScaler: TextScaler.linear(kIsWeb 
+                            ? MediaQuery.of(context).textScaleFactor.clamp(0.8, 1.2)
+                            : MediaQuery.of(context).textScaleFactor),
+                      ),
+                      child: child!,
                     ),
-                    child: child!,
                   ),
                 );
               },

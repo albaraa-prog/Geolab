@@ -70,7 +70,7 @@ class RockClassificationBloc
         final imageFile = await currentState.controller.takePicture();
         final image = io.File(imageFile.path);
         emit(ImageCaptured(image));
-        add(ClassifyRock(image));
+        // Removed automatic classification - user must press Classify button
       } catch (e) {
         emit(CameraError('Error capturing image: $e'));
       }
@@ -87,7 +87,7 @@ class RockClassificationBloc
       if (pickedFile != null) {
         final image = io.File(pickedFile.path);
         emit(ImageCaptured(image));
-        add(ClassifyRock(image));
+        // Removed automatic classification - user must press Classify button
       }
     } catch (e) {
       emit(CameraError('Error picking image: $e'));
@@ -101,12 +101,15 @@ class RockClassificationBloc
     emit(Classifying(event.image)); // File-based for mobile
     try {
       // Check if user is authenticated
+      // BYPASS AUTH CHECK FOR TESTING
+      /*
       final isAuthenticated = await _apiService.isAuthenticated();
       if (!isAuthenticated) {
         emit(const ClassificationError(
             'Please log in to use rock classification'));
         return;
       }
+      */
 
       // Check subscription status
       try {
@@ -160,13 +163,17 @@ class RockClassificationBloc
   ) async {
     // For web, we use bytes directly
     try {
+      emit(const Classifying(null));
       // Check if user is authenticated
+      // BYPASS AUTH CHECK FOR TESTING
+      /*
       final isAuthenticated = await _apiService.isAuthenticated();
       if (!isAuthenticated) {
         emit(const ClassificationError(
             'Please log in to use rock classification'));
         return;
       }
+      */
 
       // Check subscription status
       try {

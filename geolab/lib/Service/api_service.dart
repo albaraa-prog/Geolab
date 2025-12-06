@@ -1,7 +1,8 @@
 import 'dart:io' as io;
 import 'dart:typed_data';
 
-import 'package:dio/dio.dart';
+import 'package:dio/dio.dart' hide MultipartFile;
+import 'package:dio/dio.dart' as dio_lib show MultipartFile;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:geolab/config/app_config.dart';
@@ -61,7 +62,11 @@ class ApiService {
         
         // Check if we should retry
         bool shouldRetry = false;
-        if (retryCount < maxRetries) {
+        
+        // Don't retry FormData requests as they finalize the stream
+        if (error.requestOptions.data is FormData) {
+          shouldRetry = false;
+        } else if (retryCount < maxRetries) {
           // Retry on network errors
           if (error.type == DioExceptionType.connectionTimeout ||
               error.type == DioExceptionType.receiveTimeout ||
@@ -133,7 +138,6 @@ class ApiService {
       return null;
     }
   }
-
   Future<void> _saveToken(String token) async {
     // Token is automatically managed by Supabase
     // Keep this for backward compatibility
@@ -364,7 +368,11 @@ class ApiService {
 
       if (response.statusCode == 200 && response.data != null) {
         try {
-          return PredictionModel.fromJson(response.data);
+          // Backend wraps response in {data: {...}, success: true}
+          // Extract the actual prediction data
+          final predictionData = response.data['data'] ?? response.data;
+          print('Prediction data: $predictionData');
+          return PredictionModel.fromJson(predictionData);
         } catch (e) {
           print('Error parsing response: $e');
           print('Response data: ${response.data}');
@@ -459,7 +467,11 @@ class ApiService {
 
       if (response.statusCode == 200 && response.data != null) {
         try {
-          return PredictionModel.fromJson(response.data);
+          // Backend wraps response in {data: {...}, success: true}
+          // Extract the actual prediction data
+          final predictionData = response.data['data'] ?? response.data;
+          print('Prediction data: $predictionData');
+          return PredictionModel.fromJson(predictionData);
         } catch (e) {
           print('Error parsing response: $e');
           print('Response data: ${response.data}');
@@ -556,22 +568,92 @@ class ApiService {
     return result;
   }
 
-  // Explain endpoint (Gen-AI lightweight)
-  Future<String> explainPrediction({
+  // Explain endpoint (Enhanced with actual API call)
+  Future<Map<String, dynamic>> explainPrediction({
+    io.File? imageFile,
+    Uint8List? imageBytes,
+    String? fileName,
+    String? imageUrl,
     required String predictedClass,
     required double confidence,
-    Map<String, dynamic>? probabilities,
   }) async {
     try {
-      await _dio.get(
-        '$baseUrl/model-info',
+      await _checkConnectivity();
+      
+      // If we don't have an image OR image URL, fallback to simple text
+      if (imageFile == null && (imageBytes == null || imageBytes.isEmpty) && (imageUrl == null || imageUrl.isEmpty)) {
+         return {
+           'explanation': 'Predicted $predictedClass with ${(confidence * 100).toStringAsFixed(1)}% confidence.',
+           'xai_visualization': null
+         };
+      }
+      
+      final token = await _getToken();
+      if (token == null) {
+        throw Exception('Authentication required');
+      }
+
+      dynamic requestData;
+      
+      // Determine if we are sending URL (JSON) or File (FormData)
+      if (imageUrl != null && imageUrl.isNotEmpty && imageFile == null && (imageBytes == null || imageBytes.isEmpty)) {
+        requestData = {'image_url': imageUrl};
+      } else {
+        FormData formData;
+        
+        if (imageBytes != null && kIsWeb) {
+          formData = FormData.fromMap({
+            'image': dio_lib.MultipartFile.fromBytes(
+              imageBytes,
+              filename: fileName ?? 'rock_image.jpg',
+            ),
+          });
+        } else if (imageFile != null) {
+          formData = FormData.fromMap({
+            'image': await dio_lib.MultipartFile.fromFile(
+              imageFile.path,
+              filename: fileName ?? 'rock_image.jpg',
+            ),
+          });
+        } else {
+           // Should be unreachable due to first check, but fallback
+           return {
+             'explanation': 'Predicted $predictedClass with ${(confidence * 100).toStringAsFixed(1)}% confidence.',
+             'xai_visualization': null
+           };
+        }
+        requestData = formData;
+      }
+
+      final response = await _dio.post(
+        '$baseUrl/xai/explain',
+        data: requestData,
+        options: Options(
+          headers: {'Authorization': 'Bearer $token'},
+        ),
       );
-      // Simple local explanation without calling LLM server-side
+
+      if (response.statusCode == 200) {
+        return {
+          'explanation': response.data['explanation'] ?? response.data['reasoning'] ?? 'No explanation available.',
+          'xai_visualization': response.data['xai_visualization'], // Relative path from backend
+        };
+      } else {
+        // Fallback on API error
+        print('XAI API Error: ${response.statusCode} - ${response.data}');
+        final conf = (confidence * 100).toStringAsFixed(1);
+        return {
+           'explanation': 'Predicted $predictedClass with $conf% confidence. (Detailed explanation unavailable)',
+           'xai_visualization': null
+         };
+      }
+    } catch (e) {
+      print('XAI Service Error: $e');
       final conf = (confidence * 100).toStringAsFixed(1);
-      return 'Predicted $predictedClass with $conf% confidence. The model likely focused on texture and color patterns typical for this rock type.';
-    } catch (_) {
-      final conf = (confidence * 100).toStringAsFixed(1);
-      return 'Predicted $predictedClass with $conf% confidence.';
+      return {
+          'explanation': 'Predicted $predictedClass with $conf% confidence.',
+          'xai_visualization': null
+      };
     }
   }
 

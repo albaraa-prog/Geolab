@@ -12,6 +12,8 @@ import 'package:geolab/utils/app_localizations.dart';
 import 'package:geolab/utils/rtl_wrapper.dart';
 import 'package:geolab/Service/theme_service.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:geolab/features/Home/components/ClassificationResultModal.dart';
+import 'package:geolab/features/RockClassification/Bloc/rock_classification_state.dart';
 
 class MyDrawer extends StatelessWidget {
   const MyDrawer({super.key});
@@ -201,10 +203,30 @@ class MyDrawer extends StatelessWidget {
                     itemBuilder: (context, index) {
                       final p = items[index];
                       return ListTile(
-                        leading: const Icon(HugeIcons.strokeRoundedAbacus),
+                        leading: const Icon(HugeIcons.strokeRoundedTime04),
                         title: Text(p.prediction),
                         subtitle: Text('${p.confidencePercentage} • ${p.timestamp.toLocal()}'),
-                        onTap: () {},
+                        onTap: () {
+                          showModalBottomSheet(
+                            context: context,
+                            backgroundColor: themeService.surfaceColor,
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                            ),
+                            builder: (context) => ClassificationResultModal(
+                              state: ClassificationComplete(
+                                rockType: p.prediction,
+                                confidence: p.confidence,
+                                image: null,
+                                additionalData: {
+                                  'xai_visualization': p.xaiVisualization,
+                                  'image_url': p.imagePath,
+                                },
+                              ),
+                              themeService: themeService,
+                            ),
+                          );
+                        },
                       );
                     },
                   );

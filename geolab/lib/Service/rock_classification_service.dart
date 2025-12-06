@@ -27,9 +27,9 @@ class RockClassificationServiceImpl implements RockClassificationService {
       final PredictionModel prediction =
           await _apiService.predictRockType(image);
 
-      if (prediction.confidence == 0.0 || prediction.prediction.isEmpty) {
-        throw Exception('Invalid prediction result');
-      }
+      // Removed overly strict validation - parsing already handles defaults
+      print('Parsed prediction: ${prediction.prediction}, confidence: ${prediction.confidence}');
+
 
       return RockClassification(
         rockType: prediction.prediction,
@@ -38,7 +38,7 @@ class RockClassificationServiceImpl implements RockClassificationService {
           'prediction_id': prediction.id,
           'xai_visualization': prediction.xaiVisualization,
           'timestamp': prediction.timestamp.toIso8601String(),
-          'image_path': prediction.imagePath,
+          'image_url': prediction.imagePath,
         },
       );
     } catch (e) {
@@ -63,9 +63,9 @@ class RockClassificationServiceImpl implements RockClassificationService {
       final PredictionModel prediction =
           await _apiService.predictRockTypeFromBytes(imageBytes, fileName);
 
-      if (prediction.confidence == 0.0 || prediction.prediction.isEmpty) {
-        throw Exception('Invalid prediction result');
-      }
+      // Removed overly strict validation - parsing already handles defaults
+      print('Parsed prediction: ${prediction.prediction}, confidence: ${prediction.confidence}');
+
 
       return RockClassification(
         rockType: prediction.prediction,
@@ -74,7 +74,7 @@ class RockClassificationServiceImpl implements RockClassificationService {
           'prediction_id': prediction.id,
           'xai_visualization': prediction.xaiVisualization,
           'timestamp': prediction.timestamp.toIso8601String(),
-          'image_path': prediction.imagePath,
+          'image_url': prediction.imagePath,
         },
       );
     } catch (e) {

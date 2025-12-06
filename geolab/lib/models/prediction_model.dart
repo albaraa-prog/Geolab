@@ -22,11 +22,11 @@ class PredictionModel {
 
   factory PredictionModel.fromJson(Map<String, dynamic> json) {
     return PredictionModel(
-      prediction: json['class'] ?? 'Unknown',
-      confidence: (json['confidence'] as num).toDouble(),
-      id: json['id'],
+      prediction: json['classification'] ?? json['class'] ?? 'Unknown',
+      confidence: (json['confidence'] as num?)?.toDouble() ?? 0.0,
+      id: json['prediction_id'] ?? json['id'],
       xaiVisualization: json['xai_visualization'],
-      imagePath: json['image_path'],
+      imagePath: json['image_url'] ?? json['image_path'],
       timestamp: json['timestamp'] != null
           ? DateTime.parse(json['timestamp'])
           : DateTime.now(),

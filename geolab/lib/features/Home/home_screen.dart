@@ -10,6 +10,7 @@ import 'package:geolab/Service/theme_service.dart';
 import 'package:geolab/features/Home/components/MyCircleButton.dart';
 import 'package:geolab/features/Home/components/MyDrawer.dart';
 import 'package:geolab/features/Home/components/FileDropZone.dart';
+import 'package:geolab/features/Home/components/ClassificationResultModal.dart';
 import 'package:geolab/features/RockClassification/Bloc/rock_classification_bloc.dart';
 import 'package:geolab/features/RockClassification/Bloc/rock_classification_event.dart';
 import 'package:geolab/features/RockClassification/Bloc/rock_classification_state.dart';
@@ -442,6 +443,79 @@ class _HomePageState extends State<HomePage> {
       children: [
         _buildCameraPreview(),
         _buildOverlay(),
+        // Add Classification Animation Overlay
+        BlocBuilder<RockClassificationBloc, RockClassificationState>(
+          builder: (context, state) {
+            if (state is Classifying) {
+              return Container(
+                color: Colors.black.withOpacity(0.6),
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Pulsing animation container
+                      TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0.8, end: 1.2),
+                        duration: const Duration(milliseconds: 800),
+                        builder: (context, scale, child) {
+                          return Transform.scale(
+                            scale: scale,
+                            child: Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: CircularProgressIndicator(
+                                color: _themeService.primaryColor,
+                                strokeWidth: 3,
+                              ),
+                            ),
+                          );
+                        },
+                        onEnd: () {},
+                      ),
+                      const SizedBox(height: 24),
+                      // Animated text
+                      TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0.7, end: 1.0),
+                        duration: const Duration(milliseconds: 600),
+                        builder: (context, opacity, child) {
+                          return Opacity(
+                            opacity: opacity,
+                            child: Column(
+                              children: [
+                                Text(
+                                  context.t('rockClassification.analyzing') != 'rockClassification.analyzing'
+                                      ? context.t('rockClassification.analyzing')
+                                      : 'Analyzing Rock Sample',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Using 3-Stage Hierarchical AI Model',
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.8),
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+            return const SizedBox.shrink();
+          },
+        ),
       ],
     );
   }
@@ -548,17 +622,25 @@ class _HomePageState extends State<HomePage> {
     // On web, show simplified overlay
     if (kIsWeb) {
       return Positioned.fill(
-        child: Column(
+        child: Stack(
           children: [
-            _buildTopBar(),
-            // Spacer to center content
-            const Spacer(),
-            // Show image actions (remove/save) when image is selected
-            if (_hasImage) _buildImageActions(),
-            // Bottom controls are hidden on web (returns SizedBox.shrink)
-            _buildBottomControls(),
-            // Extra spacer at bottom for better centering
-            const Spacer(),
+            Column(
+              children: [
+                _buildTopBar(),
+              ],
+            ),
+            // Position buttons below the 400x400 image container
+            // Image container is centered, so we center this row and add top padding
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 550), // 400 image + more padding to clear overlay
+                  if (_hasImage) _buildImageActions(),
+                ],
+              ),
+            ),
+            _buildBottomControls(), // Hidden on web
           ],
         ),
       );
@@ -904,7 +986,10 @@ class _HomePageState extends State<HomePage> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => _buildResultModal(state),
+      builder: (context) => ClassificationResultModal(
+        state: state,
+        themeService: _themeService,
+      ),
     );
   }
 
@@ -919,60 +1004,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildResultModal(ClassificationComplete state) {
-    return ResponsiveContainer(
-      maxWidth: ResponsiveLayout.isWeb(context) ? 500 : null,
-      child: RTLWrapper(
-        child: SingleChildScrollView(
-          padding: ResponsiveLayout.getResponsivePadding(context),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                context.t('rockClassification.result'),
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: _themeService.textColor,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                '${context.t('rockClassification.rockType')}: ${state.rockType}',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: _themeService.textColor,
-                ),
-              ),
-              Text(
-                '${context.t('rockClassification.confidence')}: ${(state.confidence * 100).toStringAsFixed(1)}%',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: _themeService.textColor.withOpacity(0.7),
-                ),
-              ),
-              const SizedBox(height: 20),
-              if (state.additionalData != null) _buildAdditionalData(state),
-              const SizedBox(height: 20),
-              Align(
-                alignment: RTLUtils.endAlignment(context),
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _themeService.primaryColor,
-                  ),
-                  child: Text(
-                    context.t('common.close'),
-                    style: TextStyle(color: _themeService.onSurfaceColor),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+
 
   Widget _buildErrorModal(ClassificationError state) {
     return ResponsiveContainer(
@@ -1017,77 +1049,5 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildAdditionalData(ClassificationComplete state) {
-    final data = state.additionalData!;
-    final xai = data['xai_visualization'] as String?;
-    final api = geolabApi.ApiService();
-    final xaiUrl = xai != null ? api.buildFileUrl(xai) : null;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (xaiUrl != null)
-          ConstrainedBox(
-            constraints: const BoxConstraints(
-              maxHeight: 300,
-              maxWidth: double.infinity,
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                xaiUrl,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    height: 200,
-                    decoration: BoxDecoration(
-                      color: _themeService.dividerColor,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.image_not_supported,
-                            color: _themeService.textColor.withOpacity(0.5),
-                            size: 48,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'XAI visualization unavailable',
-                            style: TextStyle(
-                              color: _themeService.textColor.withOpacity(0.5),
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-        const SizedBox(height: 12),
-        FutureBuilder<String>(
-          future: api.explainPrediction(
-            predictedClass: state.rockType,
-            confidence: state.confidence,
-          ),
-          builder: (context, snapshot) {
-            final text = snapshot.data ?? 
-                         (context.t('rockClassification.generatingExplanation') != 'rockClassification.generatingExplanation'
-                          ? context.t('rockClassification.generatingExplanation')
-                          : 'Generating explanation...');
-            return Text(
-              text,
-              style: TextStyle(color: _themeService.textColor.withOpacity(0.8)),
-            );
-          },
-        ),
-        const SizedBox(height: 16),
-      ],
-    );
-  }
 }
