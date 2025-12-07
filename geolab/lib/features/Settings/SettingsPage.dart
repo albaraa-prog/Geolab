@@ -320,11 +320,35 @@ class SettingsPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  context
-                      .read<LocalizationService>()
-                      .translate('settings.subscription.title'),
-                  style: Theme.of(context).textTheme.titleLarge,
+                Row(
+                  children: [
+                    Text(
+                      context
+                          .read<LocalizationService>()
+                          .translate('settings.subscription.title'),
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: themeService.warningColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: themeService.warningColor.withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        'Coming Soon',
+                        style: TextStyle(
+                          color: themeService.warningColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 8),
                 Container(

@@ -39,6 +39,11 @@ class RockClassificationServiceImpl implements RockClassificationService {
           'xai_visualization': prediction.xaiVisualization,
           'timestamp': prediction.timestamp.toIso8601String(),
           'image_url': prediction.imagePath,
+          'stage1': prediction.stage1,
+          'stage2': prediction.stage2,
+          'stage3': prediction.stage3,
+          'probabilities': prediction.probabilities,
+          'reasoning': prediction.reasoning,
         },
       );
     } catch (e) {
@@ -75,6 +80,11 @@ class RockClassificationServiceImpl implements RockClassificationService {
           'xai_visualization': prediction.xaiVisualization,
           'timestamp': prediction.timestamp.toIso8601String(),
           'image_url': prediction.imagePath,
+          'stage1': prediction.stage1,
+          'stage2': prediction.stage2,
+          'stage3': prediction.stage3,
+          'probabilities': prediction.probabilities,
+          'reasoning': prediction.reasoning,
         },
       );
     } catch (e) {

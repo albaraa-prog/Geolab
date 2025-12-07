@@ -13,6 +13,7 @@ import 'package:geolab/utils/rtl_wrapper.dart';
 import 'package:geolab/Service/theme_service.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:geolab/features/Home/components/ClassificationResultModal.dart';
+import 'package:geolab/features/Home/components/ShimmerLoading.dart';
 import 'package:geolab/features/RockClassification/Bloc/rock_classification_state.dart';
 
 class MyDrawer extends StatelessWidget {
@@ -186,7 +187,7 @@ class MyDrawer extends StatelessWidget {
                 future: ApiService().getMyPredictions(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
+                    return const SidebarShimmerPlaceholder();
                   }
                   final items = snapshot.data ?? const <PredictionModel>[];
                   if (items.isEmpty) {
@@ -221,6 +222,12 @@ class MyDrawer extends StatelessWidget {
                                 additionalData: {
                                   'xai_visualization': p.xaiVisualization,
                                   'image_url': p.imagePath,
+                                  'probabilities': p.probabilities,
+                                  'confidence_breakdown': p.confidenceBreakdown,
+                                  'reasoning': p.reasoning,
+                                  'stage1': p.stage1,
+                                  'stage2': p.stage2,
+                                  'stage3': p.stage3,
                                 },
                               ),
                               themeService: themeService,

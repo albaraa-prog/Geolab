@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AppConfig {
@@ -41,13 +43,11 @@ class AppConfig {
   }
   
   // Backend configuration (Flask API for ML predictions)
-  // Can be configured via .env file with FLASK_API_URL
   // Default to localhost for Windows/Web/Desktop platforms
-  // For Android emulator, change to: 'http://10.0.2.2:8000/api'
-  // For physical Android/iOS device, use your PC's IP address: 'http://192.168.1.XXX:8000/api'
-  // For web, use: 'http://localhost:8000/api' (ensure Flask is running and CORS is configured)
+  // For Android emulator, automatically use 'http://10.0.2.2:8000/api'
   static String get baseUrl {
     try {
+      // 1. Prioritize .env override if strictly provided
       final url = dotenv.env['FLASK_API_URL'];
       if (url != null && url.isNotEmpty && url != 'YOUR_FLASK_API_URL') {
         return url.endsWith('/api') ? url : '$url/api';
@@ -55,7 +55,17 @@ class AppConfig {
     } catch (e) {
       print('⚠ WARNING: Could not read FLASK_API_URL from .env: $e');
     }
-    // Default fallback
+    
+    // 2. Handle Platform-specific defaults
+    if (kIsWeb) {
+      // Web always uses localhost (or relative path in prod)
+      return 'http://localhost:8000/api';
+    } else if (Platform.isAndroid) {
+      // Android Emulator loopback
+      return 'http://10.0.2.2:8000/api';
+    }
+    
+    // 3. Default fallback (Windows, local, etc)
     return 'http://localhost:8000/api';
   }
 

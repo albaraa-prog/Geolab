@@ -52,6 +52,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
     try {
       // Use Supabase signUpWithPassword
+      // Supabase will throw an error if email already exists
       final authResponse = await SupabaseService.signUpWithPassword(
         email: event.email,
         password: event.password,
@@ -81,7 +82,22 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         throw Exception('Registration failed');
       }
     } catch (e) {
-      emit(AuthError(message: e.toString()));
+      // Check for specific error types
+      final errorMessage = e.toString().toLowerCase();
+      
+      if (errorMessage.contains('already') || 
+          errorMessage.contains('exists') || 
+          errorMessage.contains('registered') ||
+          errorMessage.contains('duplicate') ||
+          errorMessage.contains('user_already_exists')) {
+        emit(AuthError(message: 'An account with this email already exists. Please sign in instead.'));
+      } else if (errorMessage.contains('email')) {
+        emit(AuthError(message: 'Invalid email address. Please check and try again.'));
+      } else if (errorMessage.contains('password')) {
+        emit(AuthError(message: 'Password is too weak. Please use a stronger password.'));
+      } else {
+        emit(AuthError(message: 'Registration failed: ${e.toString()}'));
+      }
     }
   }
 
@@ -91,9 +107,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
     try {
-      // If this is a signup with name and password, sign up first then send verification
+      // If this is a signup with name and password
       if (event.name.isNotEmpty && event.password.isNotEmpty) {
-        // Sign up with password first to create the account
+        // Try to sign up - Supabase will automatically prevent duplicates
         final authResponse = await SupabaseService.signUpWithPassword(
           email: event.email,
           password: event.password,
@@ -131,7 +147,19 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         ));
       }
     } catch (e) {
-      emit(AuthError(message: e.toString()));
+      final errorMessage = e.toString().toLowerCase();
+      
+      // Supabase returns specific errors for duplicate emails
+      if (errorMessage.contains('user already registered') ||
+          errorMessage.contains('already been registered') ||
+          errorMessage.contains('email already') ||
+          errorMessage.contains('duplicate')) {
+        emit(AuthError(message: 'An account with this email already exists. Please sign in instead.'));
+      } else if (errorMessage.contains('email') && errorMessage.contains('taken')) {
+        emit(AuthError(message: 'An account with this email already exists. Please sign in instead.'));
+      } else {
+        emit(AuthError(message: e.toString()));
+      }
     }
   }
 

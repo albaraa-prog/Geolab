@@ -32,6 +32,8 @@ class _SignUpPageState extends State<SignUpPage> {
   
   bool _isLoading = false;
   bool _emailSent = false;
+  bool _obscurePassword = true; // Password visibility toggle
+  bool _obscureConfirmPassword = true; // Confirm password visibility toggle
   int _resendTimer = 0;
   String _pendingEmail = '';
 
@@ -245,10 +247,16 @@ class _SignUpPageState extends State<SignUpPage> {
         TextInputField(
           controller: _passwordController,
           validator: validatePassword,
-          obscureText: true,
+          obscureText: _obscurePassword,
           textInputAction: TextInputAction.next,
           label: context.t('auth.password'),
           icon: HugeIcons.strokeRoundedLock,
+          showPasswordToggle: true,
+          onToggleObscureText: () {
+            setState(() {
+              _obscurePassword = !_obscurePassword;
+            });
+          },
         ),
         SizedBox(
             height: ResponsiveLayout.getResponsiveSpacing(
@@ -257,11 +265,17 @@ class _SignUpPageState extends State<SignUpPage> {
           controller: _confirmPasswordController,
           validator: (value) => validateConfirmPassword(
               value, _passwordController.text),
-          obscureText: true,
+          obscureText: _obscureConfirmPassword,
           textInputAction: TextInputAction.done,
           onFieldSubmitted: () => _submitForm(),
           label: context.t('auth.confirmPassword'),
           icon: HugeIcons.strokeRoundedLock,
+          showPasswordToggle: true,
+          onToggleObscureText: () {
+            setState(() {
+              _obscureConfirmPassword = !_obscureConfirmPassword;
+            });
+          },
         ),
         SizedBox(
             height: ResponsiveLayout.getResponsiveSpacing(
@@ -600,21 +614,33 @@ class _SignUpPageState extends State<SignUpPage> {
           TextInputField(
             controller: _passwordController,
             validator: validatePassword,
-            obscureText: true,
+            obscureText: _obscurePassword,
             textInputAction: TextInputAction.next,
             label: context.t('auth.password'),
             icon: HugeIcons.strokeRoundedLock,
+            showPasswordToggle: true,
+            onToggleObscureText: () {
+              setState(() {
+                _obscurePassword = !_obscurePassword;
+              });
+            },
           ),
           const SizedBox(height: 24),
           TextInputField(
             controller: _confirmPasswordController,
             validator: (value) => validateConfirmPassword(
                 value, _passwordController.text),
-            obscureText: true,
+            obscureText: _obscureConfirmPassword,
             textInputAction: TextInputAction.done,
             onFieldSubmitted: () => _submitForm(),
             label: context.t('auth.confirmPassword'),
             icon: HugeIcons.strokeRoundedLock,
+            showPasswordToggle: true,
+            onToggleObscureText: () {
+              setState(() {
+                _obscureConfirmPassword = !_obscureConfirmPassword;
+              });
+            },
           ),
           const SizedBox(height: 32),
           BlocConsumer<AuthBloc, AuthState>(

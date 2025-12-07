@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:geolab/config/theme.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class TextInputField extends StatelessWidget {
   final TextEditingController controller;
@@ -13,6 +14,8 @@ class TextInputField extends StatelessWidget {
   final String? hintText;
   final int? maxLines;
   final int? maxLength;
+  final bool showPasswordToggle;
+  final VoidCallback? onToggleObscureText;
 
   const TextInputField({
     super.key,
@@ -27,6 +30,8 @@ class TextInputField extends StatelessWidget {
     this.hintText,
     this.maxLines = 1,
     this.maxLength,
+    this.showPasswordToggle = false,
+    this.onToggleObscureText,
   });
 
   @override
@@ -45,6 +50,20 @@ class TextInputField extends StatelessWidget {
         labelText: label,
         hintText: hintText,
         prefixIcon: Icon(icon, color: AppTheme.primaryColor),
+        suffixIcon: showPasswordToggle
+            ? Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: IconButton(
+                  icon: Icon(
+                    obscureText
+                        ? HugeIcons.strokeRoundedViewOff
+                        : HugeIcons.strokeRoundedView,
+                    color: AppTheme.neutral600,
+                  ),
+                  onPressed: onToggleObscureText,
+                ),
+              )
+            : null,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: AppTheme.neutral300),

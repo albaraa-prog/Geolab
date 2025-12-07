@@ -205,6 +205,7 @@ class RockClassificationBloc
         rockType: result.rockType,
         confidence: result.confidence,
         image: null, // Web doesn't have File, so we pass null
+        imageBytes: event.imageBytes,
         additionalData: result.additionalData,
       ));
     } catch (e) {

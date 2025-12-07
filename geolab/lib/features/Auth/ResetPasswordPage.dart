@@ -20,6 +20,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 // Conditional import for web
 import 'url_cleaner_stub.dart'
     if (dart.library.html) 'url_cleaner_web.dart' as url_cleaner;
+import 'package:geolab/main.dart' show setRecoveryMode;
 
 // Conditional import for web HTML access - handled via helper function
 
@@ -44,6 +45,8 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
   bool _isLoading = false;
   bool _passwordReset = false;
   bool _codeProcessed = false;
+  bool _obscurePassword = true; // Password visibility toggle
+  bool _obscureConfirmPassword = true; // Confirm password visibility toggle
   
   // Timer for continuous URL cleaning on web
   Timer? _urlCleanTimer;
@@ -104,33 +107,59 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
         code = _getCodeFromUrl();
       }
       
-      // Validate code is present
+      // If no code, check if we have a valid session from PASSWORD_RECOVERY event
+      // Supabase creates a recovery session when processing the reset link
       if (code == null || code.isEmpty) {
+        
+        final client = SupabaseService.client;
+        final session = client?.auth.currentSession;
+        
+        if (session != null) {
+          // User has a valid session (from PASSWORD_RECOVERY), allow password reset
+          setState(() {
+            _codeProcessed = true;
+            _isLoading = false;
+          });
+          return;
+        }
+        
         // Wait a bit more in case Supabase is still processing
         await Future.delayed(const Duration(milliseconds: 500));
         
-        // Check again after delay
+        // Check session again
+        final sessionRetry = client?.auth.currentSession;
+        if (sessionRetry != null) {
+          setState(() {
+            _codeProcessed = true;
+            _isLoading = false;
+          });
+          return;
+        }
+        
+        // Check URL again after delay
         if (kIsWeb) {
           code = _getCodeFromUrl();
         }
         
-        // If still no code, show error and redirect
-        if (code == null || code.isEmpty) {
+        // If still no code AND no session, show error
+        if ((code == null || code.isEmpty)) {
           if (mounted) {
+            setState(() {
+              _isLoading = false;
+              _codeProcessed = false;
+            });
             AppAlerts.showSnackbar(
               context,
               'Invalid or missing reset code. Please request a new password reset link.',
               color: AppTheme.errorColor,
             );
-            context.go('/sign-in');
           }
           return;
         }
       }
       
-      // Process the code
+      // Process the code if we have one
       if (mounted && code != null && code.isNotEmpty) {
-        // Process the code (might be from widget or extracted from URL)
         _processResetCodeWithCode(code);
       }
     });
@@ -234,6 +263,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
         // Navigate back to sign-in if code is invalid
         Future.delayed(const Duration(seconds: 2), () {
           if (mounted) {
+            setRecoveryMode(false);
             context.go('/sign-in');
           }
         });
@@ -278,6 +308,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
       // Navigate to sign-in after a delay
       Future.delayed(const Duration(seconds: 2), () {
         if (mounted) {
+          setRecoveryMode(false);
           context.go('/sign-in');
         }
       });
@@ -298,6 +329,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
       onPopInvoked: (didPop) {
         if (!didPop && !_passwordReset) {
           // If trying to go back before resetting password, go to sign-in instead
+          setRecoveryMode(false);
           context.go('/sign-in');
         }
       },
@@ -499,9 +531,15 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
           TextInputField(
             controller: _passwordController,
             label: context.t('auth.password'),
-            obscureText: true,
+            obscureText: _obscurePassword,
             validator: validatePassword,
             icon: HugeIcons.strokeRoundedLock,
+            showPasswordToggle: true,
+            onToggleObscureText: () {
+              setState(() {
+                _obscurePassword = !_obscurePassword;
+              });
+            },
           ),
           SizedBox(
             height: ResponsiveLayout.getResponsiveSpacing(
@@ -514,12 +552,18 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
           TextInputField(
             controller: _confirmPasswordController,
             label: context.t('auth.confirmPassword'),
-            obscureText: true,
+            obscureText: _obscureConfirmPassword,
             validator: (value) => validateConfirmPassword(
               value,
               _passwordController.text,
             ),
             icon: HugeIcons.strokeRoundedLock,
+            showPasswordToggle: true,
+            onToggleObscureText: () {
+              setState(() {
+                _obscureConfirmPassword = !_obscureConfirmPassword;
+              });
+            },
           ),
           SizedBox(
             height: ResponsiveLayout.getResponsiveSpacing(
@@ -552,7 +596,10 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
           ),
           const SizedBox(height: 24),
           TextButton(
-            onPressed: () => context.go('/sign-in'),
+            onPressed: () {
+              setRecoveryMode(false);
+              context.go('/sign-in');
+            },
             child: Text(
               context.t('auth.resetPassword.backToSignIn'),
               style: TextStyle(

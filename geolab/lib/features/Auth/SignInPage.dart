@@ -29,6 +29,7 @@ class _SignInPageState extends State<SignInPage> {
   bool _isLoading = false;
   bool _emailSent = false;
   bool _usePassword = true; // Toggle between password and magic link
+  bool _obscurePassword = true; // Password visibility toggle
   int _resendTimer = 0;
   String _pendingEmail = '';
 
@@ -208,9 +209,15 @@ class _SignInPageState extends State<SignInPage> {
             TextInputField(
               controller: _passwordController,
               label: context.t('auth.password'),
-              obscureText: true,
+              obscureText: _obscurePassword,
               validator: validatePassword,
               icon: HugeIcons.strokeRoundedLock,
+              showPasswordToggle: true,
+              onToggleObscureText: () {
+                setState(() {
+                  _obscurePassword = !_obscurePassword;
+                });
+              },
             ),
             SizedBox(
                 height: ResponsiveLayout.getResponsiveSpacing(
@@ -222,59 +229,51 @@ class _SignInPageState extends State<SignInPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Flexible(
-                  child: TextButton(
-                    onPressed: () {
-                      setState(() {
-                        _usePassword = !_usePassword;
-                        _passwordController.clear();
-                      });
-                    },
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          _usePassword 
-                              ? HugeIcons.strokeRoundedMail01 
-                              : HugeIcons.strokeRoundedLock,
-                          size: 16,
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _usePassword = !_usePassword;
+                      _passwordController.clear();
+                    });
+                  },
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        _usePassword 
+                            ? HugeIcons.strokeRoundedMail01 
+                            : HugeIcons.strokeRoundedLock,
+                        size: 16,
+                        color: AppTheme.primaryColor,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        _usePassword
+                            ? context.t('auth.signIn.useMagicLink')
+                            : context.t('auth.signIn.usePassword'),
+                        style: TextStyle(
                           color: AppTheme.primaryColor,
+                          fontSize: ResponsiveLayout.getResponsiveFontSize(
+                              context,
+                              mobile: 14,
+                              tablet: 16,
+                              desktop: 18),
                         ),
-                        const SizedBox(width: 4),
-                        Flexible(
-                          child: Text(
-                            _usePassword
-                                ? context.t('auth.signIn.useMagicLink')
-                                : context.t('auth.signIn.usePassword'),
-                            style: TextStyle(
-                              color: AppTheme.primaryColor,
-                              fontSize: ResponsiveLayout.getResponsiveFontSize(
-                                  context,
-                                  mobile: 14,
-                                  tablet: 16,
-                                  desktop: 18),
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
-                Flexible(
-                  child: TextButton(
-                    onPressed: _showResetPasswordDialog,
-                    child: Text(
-                      context.t('auth.forgotPassword'),
-                      style: TextStyle(
-                        color: AppTheme.primaryColor,
-                        fontSize: ResponsiveLayout.getResponsiveFontSize(
-                            context,
-                            mobile: 14,
-                            tablet: 16,
-                            desktop: 18),
-                      ),
-                      overflow: TextOverflow.ellipsis,
+                TextButton(
+                  onPressed: _showResetPasswordDialog,
+                  child: Text(
+                    context.t('auth.forgotPassword'),
+                    style: TextStyle(
+                      color: AppTheme.primaryColor,
+                      fontSize: ResponsiveLayout.getResponsiveFontSize(
+                          context,
+                          mobile: 14,
+                          tablet: 16,
+                          desktop: 18),
                     ),
                   ),
                 ),
@@ -309,7 +308,14 @@ class _SignInPageState extends State<SignInPage> {
                   color: AppTheme.successColor,
                 );
               } else if (state is AuthAuthenticated) {
-                context.go('/');
+                // Don't navigate away if we're on reset-password page
+                final currentPath = Uri.base.path;
+                if (currentPath != '/reset-password') {
+                  print('🔍 SignInPage: Authenticated, navigating to home');
+                  context.go('/');
+                } else {
+                  print('🔍 SignInPage: Authenticated but on reset-password, staying put');
+                }
               }
             },
             builder: (context, state) {
@@ -395,9 +401,15 @@ class _SignInPageState extends State<SignInPage> {
             TextInputField(
               controller: _passwordController,
               label: context.t('auth.password'),
-              obscureText: true,
+              obscureText: _obscurePassword,
               validator: validatePassword,
               icon: HugeIcons.strokeRoundedLock,
+              showPasswordToggle: true,
+              onToggleObscureText: () {
+                setState(() {
+                  _obscurePassword = !_obscurePassword;
+                });
+              },
             ),
             const SizedBox(height: 16),
             // Forgot password and magic link options
@@ -470,7 +482,14 @@ class _SignInPageState extends State<SignInPage> {
                   color: AppTheme.successColor,
                 );
               } else if (state is AuthAuthenticated) {
-                context.go('/');
+                // Don't navigate away if we're on reset-password page
+                final currentPath = Uri.base.path;
+                if (currentPath != '/reset-password') {
+                  print('🔍 SignInPage (magic link): Authenticated, navigating to home');
+                  context.go('/');
+                } else {
+                  print('🔍 SignInPage (magic link): Authenticated but on reset-password, staying put');
+                }
               }
             },
             builder: (context, state) {

@@ -11,6 +11,7 @@ import 'package:geolab/features/Home/components/MyCircleButton.dart';
 import 'package:geolab/features/Home/components/MyDrawer.dart';
 import 'package:geolab/features/Home/components/FileDropZone.dart';
 import 'package:geolab/features/Home/components/ClassificationResultModal.dart';
+import 'package:geolab/features/Home/components/PasswordRecoveryBanner.dart';
 import 'package:geolab/features/RockClassification/Bloc/rock_classification_bloc.dart';
 import 'package:geolab/features/RockClassification/Bloc/rock_classification_event.dart';
 import 'package:geolab/features/RockClassification/Bloc/rock_classification_state.dart';
@@ -418,10 +419,19 @@ class _HomePageState extends State<HomePage> {
         key: _scaffoldKey,
         drawer: const MyDrawer(),
         backgroundColor: _themeService.backgroundColor,
-        body: ResponsiveBuilder(
-          mobile: _buildMobileLayout(),
-          tablet: _buildTabletLayout(),
-          desktop: _buildDesktopLayout(),
+        body: Column(
+          children: [
+            // Password Recovery Banner at the top
+            const PasswordRecoveryBanner(),
+            // Main content
+            Expanded(
+              child: ResponsiveBuilder(
+                mobile: _buildMobileLayout(),
+                tablet: _buildTabletLayout(),
+                desktop: _buildDesktopLayout(),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -831,28 +841,27 @@ class _HomePageState extends State<HomePage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          TextButton.icon(
+          ElevatedButton.icon(
             onPressed: _clearCapturedImage,
-            icon: Icon(Icons.delete_outline, color: _themeService.onSurfaceColor),
+            icon: Icon(Icons.delete_outline, color: Colors.white),
             label: Text(
               context.t('camera.remove'),
-              style: TextStyle(color: _themeService.onSurfaceColor, fontSize: 16),
+              style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              elevation: 2,
             ),
           ),
           const SizedBox(width: 24),
           // Show classify button if not classified yet
           if (!_isClassificationComplete)
-            _buildClassifyButton()
-          // Show save button only after classification is complete
-          else
-            TextButton.icon(
-              onPressed: _saveCapturedImage,
-              icon: Icon(Icons.save_alt, color: _themeService.onSurfaceColor),
-              label: Text(
-                context.t('camera.save'),
-                style: TextStyle(color: _themeService.onSurfaceColor, fontSize: 16),
-              ),
-            ),
+            _buildClassifyButton(),
         ],
       ),
     );

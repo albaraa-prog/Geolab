@@ -18,6 +18,11 @@ import 'package:geolab/Service/supabase_service.dart';
 import 'package:geolab/features/Auth/Bloc/auth_state.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 
+// Global flag for password recovery redirect
+bool _isRecoveryMode = false;
+bool get isRecoveryMode => _isRecoveryMode;
+void setRecoveryMode(bool value) => _isRecoveryMode = value;
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -94,8 +99,18 @@ void main() async {
     supabaseInitialized = true;
     print('✓ Supabase initialized successfully');
     
-    // Note: Auth state listener is set up in GeolabApp to avoid duplicate listeners
-    // and prevent infinite loops
+    // Set up auth listener IMMEDIATELY after init to catch PASSWORD_RECOVERY event
+    // This MUST happen before runApp() to catch the deep link processing
+    SupabaseService.client?.auth.onAuthStateChange.listen((data) {
+      // Check for PASSWORD_RECOVERY event - this fires when user clicks reset link
+      if (data.event == AuthChangeEvent.passwordRecovery) {
+        setRecoveryMode(true);
+      }
+    });
+    
+    // Give Supabase a moment to process any deep links and fire events
+    await Future.delayed(const Duration(milliseconds: 100));
+    
   } catch (e) {
     print('❌ ERROR initializing Supabase: $e');
     print('');
@@ -138,9 +153,15 @@ class GeolabApp extends StatelessWidget {
             bloc.add(AuthCheckRequested());
             
             // Listen to Supabase auth changes and sync with BLoC
+            // Note: PASSWORD_RECOVERY is handled in main() before runApp()
             if (SupabaseService.isInitialized) {
               SupabaseService.client?.auth.onAuthStateChange.listen((data) {
                 final AuthChangeEvent event = data.event;
+                
+                // PASSWORD_RECOVERY is already handled in main(), skip it here
+                if (event == AuthChangeEvent.passwordRecovery) {
+                  return;
+                }
                 
                 // Check current bloc state to prevent infinite loops
                 final currentState = bloc.state;
@@ -227,6 +248,13 @@ class GeolabApp extends StatelessWidget {
                 
                 return BlocListener<AuthBloc, AuthState>(
                   listener: (context, state) {
+                    // Don't refresh router if we're on reset-password page
+                    // This prevents unwanted redirects during password recovery
+                    final currentRoute = router.routerDelegate.currentConfiguration.uri.path;
+                    if (currentRoute == '/reset-password') {
+                      return;
+                    }
+                    
                     // Force router to re-evaluate redirects on auth state change
                     router.refresh();
                   },

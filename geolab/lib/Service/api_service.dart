@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart' hide MultipartFile;
 import 'package:dio/dio.dart' as dio_lib show MultipartFile;
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:http_parser/http_parser.dart'; // Add MediaType support
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:geolab/config/app_config.dart';
 import 'package:geolab/constants/auth_constants.dart';
@@ -178,6 +179,31 @@ class ApiService {
       );
     } catch (e) {
       throw Exception('Failed to send verification email: ${e.toString()}');
+    }
+  }
+
+  // Check if email already exists
+  Future<bool> checkEmailExists(String email) async {
+    try {
+      await _checkConnectivity();
+      
+      final response = await _dio.post(
+        '$baseUrl/auth/check-email',
+        data: {
+          'email': email.trim().toLowerCase(),
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return response.data['exists'] == true;
+      }
+      
+      // If we can't check, assume it doesn't exist to allow registration
+      return false;
+    } catch (e) {
+      print('Error checking email: $e');
+      // If we can't check, assume it doesn't exist to allow registration
+      return false;
     }
   }
 
@@ -564,7 +590,7 @@ class ApiService {
     
     // Backend serves files at /api/uploads/ (keep the /api part)
     final result = '$baseUrl/$finalPath';
-    print('buildFileUrl: input="$relativePath" -> output="$result"');
+    print('🔍 buildFileUrl: input="$relativePath" -> output="$result"');
     return result;
   }
 
@@ -606,6 +632,7 @@ class ApiService {
             'image': dio_lib.MultipartFile.fromBytes(
               imageBytes,
               filename: fileName ?? 'rock_image.jpg',
+              contentType: MediaType.parse('image/jpeg'), // Explicit content type for Web
             ),
           });
         } else if (imageFile != null) {
@@ -634,9 +661,14 @@ class ApiService {
       );
 
       if (response.statusCode == 200) {
+        print('🔍 XAI Response: ${response.data}');
         return {
           'explanation': response.data['explanation'] ?? response.data['reasoning'] ?? 'No explanation available.',
           'xai_visualization': response.data['xai_visualization'], // Relative path from backend
+          'probabilities': response.data['probabilities'],
+          'stage1': response.data['stage1'],
+          'stage2': response.data['stage2'],
+          'stage3': response.data['stage3'],
         };
       } else {
         // Fallback on API error

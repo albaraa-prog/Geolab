@@ -1,4 +1,5 @@
 import 'dart:io' as io;
+import 'dart:typed_data';
 
 import 'package:camera/camera.dart';
 import 'package:equatable/equatable.dart';
@@ -58,17 +59,19 @@ class ClassificationComplete extends RockClassificationState {
   final String rockType;
   final double confidence;
   final io.File? image; // Nullable for web (bytes-based)
+  final Uint8List? imageBytes; // For web
   final Map<String, dynamic>? additionalData;
 
   const ClassificationComplete({
     required this.rockType,
     required this.confidence,
     this.image, // Can be null for web
+    this.imageBytes,
     this.additionalData,
   });
 
   @override
-  List<Object?> get props => [rockType, confidence, image, additionalData];
+  List<Object?> get props => [rockType, confidence, image, imageBytes, additionalData];
 }
 
 class ClassificationError extends RockClassificationState {
