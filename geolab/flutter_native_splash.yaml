@@ -1,0 +1,8 @@
+flutter_native_splash:
+  color: "#795548"
+  image: assets/images/rock_logo.png
+  # branding: assets/images/rock_logo.png # Removed to prevent duplication/large size
+
+  android_12:
+    image: assets/images/rock_logo.png
+    color: "#795548"

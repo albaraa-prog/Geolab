@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'prediction_model.g.dart';
@@ -35,12 +36,40 @@ class PredictionModel {
   factory PredictionModel.fromJson(Map<String, dynamic> json) {
     var metadata = json['metadata'] ?? {};
     
-    // Parse helper for stages
-    Map<String, dynamic>? parseStage(dynamic stageData) {
-      if (stageData == null) return null;
-      if (stageData is Map) return Map<String, dynamic>.from(stageData);
+    // Robust helper to parse Maps from either Map object or JSON String
+    Map<String, dynamic>? parseMap(dynamic input) {
+      if (input == null) return null;
+      if (input is Map) return Map<String, dynamic>.from(input);
+      if (input is String) {
+        try {
+          // Fix: Handle potentially double-encoded strings/escaped quotes
+          final decoded = jsonDecode(input);
+          if (decoded is Map) return Map<String, dynamic>.from(decoded);
+        } catch (e) {
+          print('Error parsing JSON string in PredictionModel: $e');
+        }
+      }
       return null;
     }
+
+    // Helper to parse probabilities specifically to Map<String, double>
+    Map<String, double> parseProbs(dynamic input) {
+      final map = parseMap(input);
+      if (map == null) return {};
+      try {
+        return map.map((k, v) {
+          if (v is num) return MapEntry(k, v.toDouble());
+          if (v is String) return MapEntry(k, double.tryParse(v) ?? 0.0);
+          return MapEntry(k, 0.0);
+        });
+      } catch (e) {
+        return {};
+      }
+    }
+
+    // Attempt to find probabilities in multiple locations
+    final probs = parseProbs(json['probabilities']) 
+             ..addAll(parseProbs(metadata['probabilities']));
 
     return PredictionModel(
       prediction: json['classification'] ?? json['class'] ?? 'Unknown',
@@ -48,21 +77,12 @@ class PredictionModel {
       id: json['prediction_id'] ?? json['id'],
       xaiVisualization: json['xai_visualization'] ?? metadata['xai_visualization'],
       imagePath: json['image_url'] ?? json['image_path'],
-      probabilities: (json['probabilities'] as Map<String, dynamic>?)?.map(
-            (k, v) => MapEntry(k, (v as num).toDouble()),
-          ) ??
-          (metadata['probabilities'] as Map<String, dynamic>?)?.map(
-            (k, v) => MapEntry(k, (v as num).toDouble()),
-          ) ?? 
-          {},
-      confidenceBreakdown: (json['confidence_breakdown'] as Map<String, dynamic>?)?.map(
-            (k, v) => MapEntry(k, (v as num).toDouble()),
-          ) ??
-          {},
+      probabilities: probs.isNotEmpty ? probs : {},
+      confidenceBreakdown: parseProbs(json['confidence_breakdown']),
       reasoning: json['reasoning'] ?? json['explanation'] ?? (metadata['reasoning']),
-      stage1: parseStage(json['stage1'] ?? metadata['stage1']),
-      stage2: parseStage(json['stage2'] ?? metadata['stage2']),
-      stage3: parseStage(json['stage3'] ?? metadata['stage3']),
+      stage1: parseMap(json['stage1'] ?? metadata['stage1']),
+      stage2: parseMap(json['stage2'] ?? metadata['stage2']),
+      stage3: parseMap(json['stage3'] ?? metadata['stage3']),
       timestamp: json['timestamp'] != null
           ? DateTime.parse(json['timestamp'])
           : DateTime.now(),

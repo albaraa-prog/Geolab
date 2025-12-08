@@ -10,6 +10,7 @@ import 'package:geolab/features/Auth/SignUpPage.dart';
 import 'package:geolab/features/Home/home_screen.dart';
 import 'package:geolab/features/Settings/SettingsPage.dart';
 import 'package:go_router/go_router.dart';
+import 'package:geolab/utils/SplashScreen.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:geolab/Service/supabase_service.dart'; // Added for password recovery check
 import 'package:geolab/main.dart' show isRecoveryMode, setRecoveryMode;
@@ -19,7 +20,7 @@ import 'package:geolab/features/Auth/url_cleaner_stub.dart'
     if (dart.library.html) 'package:geolab/features/Auth/url_cleaner_web.dart' as url_cleaner;
 
 final router = GoRouter(
-  initialLocation: '/',
+  initialLocation: '/splash',
   redirect: (context, state) {
     try {
       final uri = state.uri;
@@ -73,9 +74,21 @@ final router = GoRouter(
       final authBloc = context.read<AuthBloc>();
       final authState = authBloc.state;
 
-      // Don't redirect if auth is still loading
+      // Handle loading state - stay on splash
       if (authState is AuthLoading || authState is AuthInitial) {
+        if (currentPath != '/splash') {
+          return '/splash';
+        }
         return null;
+      }
+      
+      // If we are on splash and authenticated, go to home
+      if (currentPath == '/splash') {
+         if (authState is AuthAuthenticated) {
+           return '/';
+         } else if (authState is AuthUnauthenticated) {
+           return '/sign-in';
+         }
       }
 
       // If on auth pages and authenticated, redirect to home
@@ -139,6 +152,10 @@ final router = GoRouter(
       builder: (context, state) => const ProtectedRoute(
       child: HomePage(),
       )
+    ),
+    GoRoute(
+      path: '/splash',
+      builder: (context, state) => const SplashScreen(),
     ),
   ],
   errorBuilder: (context, state) => Scaffold(

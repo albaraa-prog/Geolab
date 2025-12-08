@@ -24,6 +24,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:geolab/Service/api_service.dart' as geolabApi;
 import 'package:geolab/Service/network_service.dart';
+import 'package:geolab/utils/error_handler.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -118,7 +119,7 @@ class _HomePageState extends State<HomePage> {
       await _requestCameraPermissions();
       await _setupCamera();
     } catch (e) {
-      _showErrorMessage('${context.t('camera.error')}: $e');
+      _showErrorMessage(ErrorHandler.getFriendlyErrorMessage(e));
     }
   }
 
@@ -194,7 +195,7 @@ class _HomePageState extends State<HomePage> {
     } catch (e) {
       if (mounted && !_isDisposed) {
         setState(() => _isTakingPicture = false);
-        _showErrorMessage('${context.t('camera.error')}: $e');
+        _showErrorMessage(ErrorHandler.getFriendlyErrorMessage(e));
       }
     }
   }
@@ -223,7 +224,7 @@ class _HomePageState extends State<HomePage> {
         });
       }
     } catch (e) {
-      _showErrorMessage('${context.t('camera.error')}: $e');
+      _showErrorMessage(ErrorHandler.getFriendlyErrorMessage(e));
     }
   }
 
@@ -239,7 +240,7 @@ class _HomePageState extends State<HomePage> {
     try {
       context.read<RockClassificationBloc>().add(ClassifyRockFromBytes(bytes, fileName: 'rock_image.jpg'));
     } catch (e) {
-      _showErrorMessage('Error starting classification: $e');
+      _showErrorMessage(ErrorHandler.getFriendlyErrorMessage(e));
     }
   }
 
@@ -258,7 +259,7 @@ class _HomePageState extends State<HomePage> {
       _isSwitchingCamera = false;
     } catch (e) {
       _isSwitchingCamera = false;
-      _showErrorMessage('Error switching camera: $e');
+      _showErrorMessage(ErrorHandler.getFriendlyErrorMessage(e));
     }
   }
 
@@ -274,7 +275,7 @@ class _HomePageState extends State<HomePage> {
         setState(() => _isFlashOn = !_isFlashOn);
       }
     } catch (e) {
-      _showErrorMessage('${context.t('camera.error')}: $e');
+      _showErrorMessage(ErrorHandler.getFriendlyErrorMessage(e));
     }
   }
 
@@ -286,7 +287,7 @@ class _HomePageState extends State<HomePage> {
     try {
       context.read<RockClassificationBloc>().add(ClassifyRock(imageFile));
     } catch (e) {
-      _showErrorMessage('Error starting classification: $e');
+      _showErrorMessage(ErrorHandler.getFriendlyErrorMessage(e));
     }
   }
 
@@ -298,7 +299,7 @@ class _HomePageState extends State<HomePage> {
         await _saveImageMobile(bytes);
       }
     } catch (e) {
-      _showErrorMessage('${context.t('camera.saveError')}: $e');
+      _showErrorMessage(ErrorHandler.getFriendlyErrorMessage(e));
     }
   }
 
@@ -1034,7 +1035,7 @@ class _HomePageState extends State<HomePage> {
               ),
               const SizedBox(height: 16),
               Text(
-                state.message,
+                ErrorHandler.getFriendlyErrorMessage(state.message),
                 style: TextStyle(
                   fontSize: 16,
                   color: _themeService.textColor,

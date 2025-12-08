@@ -4,28 +4,30 @@ class XaiExplanationService {
   
   /// Generates a dynamic, human-readable explanation based on 3-stage hierarchical data.
   static String generateExplanation(ClassificationComplete state) {
-    // 1. Prioritize stored reasoning (from backend/history)
-    if (state.additionalData != null && 
-        state.additionalData!['reasoning'] != null && 
-        state.additionalData!['reasoning'].toString().isNotEmpty &&
-        state.additionalData!['reasoning'] != 'No explanation available.') {
-      return state.additionalData!['reasoning'];
+    // 1. Check for detailed stage data for rich explanation
+    final data = state.additionalData ?? {};
+    // FIX: Allow partial stages. If ANY stage is present, try to generate detailed explanation.
+    final hasStages = data['stage1'] != null || data['stage2'] != null || data['stage3'] != null;
+
+    if (hasStages) {
+       // Proceed to generate detailed explanation
+    } else if (data['reasoning'] != null && 
+        data['reasoning'].toString().isNotEmpty &&
+        data['reasoning'] != 'No explanation available.') {
+      // Fallback to backend explanation if no stages
+      return data['reasoning'].toString().replaceAll('→', '->');
+    } else if (state.additionalData == null) {
+      return 'Detailed hierarchical analysis is unavailable.';
     }
 
-    if (state.additionalData == null) {
-      return 'Detailed hierarchical analysis is unavailable.'; // Fallback
-    }
     
-    final data = state.additionalData!;
     final buffer = StringBuffer();
     
-    // Check if we have stage data
-    final hasStages = data.containsKey('stage1') && data.containsKey('stage2');
     
     if (hasStages) {
-      final stage1 = data['stage1'];
-      final stage2 = data['stage2'];
-      final stage3 = data['stage3']; // Can be null if not reached/confident
+      final stage1 = data['stage1'] as Map<String, dynamic>?;
+      final stage2 = data['stage2'] as Map<String, dynamic>?;
+      final stage3 = data['stage3'] as Map<String, dynamic>?;
       
       // STAGE 1 LOGIC
       if (stage1 != null) {
@@ -43,7 +45,7 @@ class XaiExplanationService {
       // STAGE 2 LOGIC
       if (stage2 != null) {
         final probs2 = stage2['probabilities'] as Map?;
-        final mainType = stage2['class_name'] ?? 'Unknown';
+        final mainType = stage2['main_category'] ?? stage2['class_name'] ?? 'Unknown';
         final conf2 = stage2['confidence'] as double? ?? 0.0;
         
         buffer.write('2. **Main Category**: It is identified as **$mainType** (${(conf2 * 100).toStringAsFixed(1)}%). ');
@@ -84,9 +86,18 @@ class XaiExplanationService {
 
     } else {
       // FALLBACK TO FLAT LIST LOGIC (Old)
-      final probabilities = data['probabilities'] != null 
-          ? Map<String, double>.from(data['probabilities'])
-          : <String, double>{};
+      Map<String, double> probabilities = {};
+      
+      try {
+        if (data['probabilities'] != null) {
+           final raw = data['probabilities'];
+           if (raw is Map) {
+             probabilities = raw.map((k, v) => MapEntry(k.toString(), (v as num).toDouble()));
+           }
+        }
+      } catch (e) {
+        print('Error parsing probabilities in XAI Service: $e');
+      }
           
       if (probabilities.isEmpty) return state.additionalData?['reasoning'] ?? 'No data available.';
 
@@ -104,6 +115,6 @@ class XaiExplanationService {
       }
     }
     
-    return buffer.toString();
+    return buffer.toString().replaceAll('→', '->');
   }
 }

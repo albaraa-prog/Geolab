@@ -13,6 +13,7 @@ import 'package:geolab/utils/rtl_wrapper.dart';
 import 'package:geolab/config/theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:geolab/utils/error_handler.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 class SignInPage extends StatefulWidget {
@@ -290,7 +291,10 @@ class _SignInPageState extends State<SignInPage> {
             listener: (context, state) {
               if (state is AuthError) {
                 AppAlerts.showAlert(
-                    context, context.t('common.error'), state.message);
+                    context, 
+                    context.t('common.error'), 
+                    ErrorHandler.getFriendlyErrorMessage(state.message)
+                );
               } else if (state is AuthEmailVerificationSent) {
                 setState(() {
                   _emailSent = true;
@@ -737,11 +741,12 @@ class _SignInPageState extends State<SignInPage> {
                     height: ResponsiveLayout.getResponsiveSpacing(context,
                         mobile: 40, tablet: 60, desktop: 80)),
                 // Logo or App Title
-                Icon(
-                  HugeIcons.strokeRoundedGem,
-                  size: ResponsiveLayout.getResponsiveIconSize(context,
-                      mobile: 80, tablet: 100, desktop: 120),
-                  color: Colors.white,
+                Image.asset(
+                  'assets/images/rock_logo.png',
+                  width: ResponsiveLayout.getResponsiveIconSize(context,
+                      mobile: 200, tablet: 250, desktop: 300),
+                  height: ResponsiveLayout.getResponsiveIconSize(context,
+                      mobile: 200, tablet: 250, desktop: 300),
                 ),
                 SizedBox(
                     height: ResponsiveLayout.getResponsiveSpacing(context,
@@ -829,10 +834,10 @@ class _SignInPageState extends State<SignInPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(
-                      HugeIcons.strokeRoundedGem,
-                      size: 120,
-                      color: Colors.white,
+                    Image.asset(
+                      'assets/images/rock_logo.png',
+                      width: 350,
+                      height: 350,
                     ),
                     const SizedBox(height: 24),
                     const Text(

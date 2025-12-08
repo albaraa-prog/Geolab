@@ -1,0 +1,6 @@
+flutter_launcher_icons:
+  image_path: "assets/images/rock_logo.png"
+  android: true
+  ios: true
+  adaptive_icon_background: "#795548"
+  adaptive_icon_foreground: "assets/images/rock_logo.png"

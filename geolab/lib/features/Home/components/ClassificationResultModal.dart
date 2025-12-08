@@ -1,5 +1,4 @@
-import 'dart:io' as io;
-import 'dart:typed_data';
+
 
 import 'package:flutter/material.dart';
 import 'package:geolab/Service/api_service.dart' as geolabApi;
@@ -11,9 +10,8 @@ import 'package:geolab/utils/responsive_layout.dart';
 import 'package:geolab/utils/rtl_wrapper.dart';
 import 'package:geolab/Service/pdf_generation_service.dart';
 import 'package:geolab/Service/xai_explanation_service.dart';
-
-import 'package:share_plus/share_plus.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:geolab/utils/pdf_handler/pdf_handler.dart';
+import 'package:geolab/utils/error_handler.dart';
 
 class ClassificationResultModal extends StatelessWidget {
   final ClassificationComplete state;
@@ -70,7 +68,7 @@ class ClassificationResultModal extends StatelessWidget {
                       onPressed: () => _shareResult(context),
                       icon: const Icon(Icons.share_outlined, size: 18),
                       // Just hardcode Share for simplicity/safety vs localization map
-                      label: const Text('Share PDF'), 
+                      label: const Text('Save Analysis PDF'), 
                       style: OutlinedButton.styleFrom(
                         foregroundColor: themeService.primaryColor,
                         side: BorderSide(color: themeService.primaryColor),
@@ -170,8 +168,7 @@ class ClassificationResultModal extends StatelessWidget {
             );
           }(),
           builder: (context, snapshot) {
-            String? xaiPath;
-            String? xaiUrl;
+
             
             // Prioritize stored additionalData if available (History)
             var data = state.additionalData;
@@ -188,25 +185,10 @@ class ClassificationResultModal extends StatelessWidget {
             }
             
             if (data != null) {
-               xaiPath = data!['xai_visualization'];
+
             }
 
-            // Construct full URL if we have a path
-            if (xaiPath != null && xaiPath.isNotEmpty) {
-               String baseUrl = geolabApi.ApiService.baseUrl;
-               // If baseUrl ends with /api, remove it because usually uploads are served from root or specific static path
-               // BUT, in this specific setup, we need to verify where backend serves uploads from.
-               // Assuming backend serves at /api/uploads/filename as per `buildFileUrl` logic in ApiService.
-               // Let's rely on ApiService helper if possible, or replicate it carefully.
-               
-               // Replicate logic: verify if path already has 'uploads/'
-               String normalizedPath = xaiPath!.replaceAll('\\', '/').replaceFirst(RegExp(r'^/+'), '');
-               if (!normalizedPath.startsWith('uploads/')) {
-                 normalizedPath = 'uploads/$normalizedPath';
-               }
-               
-               xaiUrl = '$baseUrl/$normalizedPath';
-            }
+            // Parse Stages
             
             // Parse Stages
             Map<String, double> probs1 = {};
@@ -216,26 +198,34 @@ class ClassificationResultModal extends StatelessWidget {
              // Helper for safe casting
             Map<String, double> safeParseProbs(dynamic input) {
                if (input == null || input is! Map) return {};
-               return Map<String, double>.from(
-                 input.map((key, value) => MapEntry(key.toString(), (value as num).toDouble()))
-               );
+               try {
+                 return Map<String, double>.from(
+                   input.map((key, value) {
+                     if (value is num) return MapEntry(key.toString(), value.toDouble());
+                     if (value is String) return MapEntry(key.toString(), double.tryParse(value) ?? 0.0);
+                     return MapEntry(key.toString(), 0.0);
+                   })
+                 );
+               } catch (e) {
+                 return {};
+               }
             }
             
+            
             if (data != null) {
-               if (data!['stage1'] != null) {
+               if (data!['stage1'] != null && data!['stage1'] is Map) {
                  probs1 = safeParseProbs(data!['stage1']['probabilities']);
                }
-               if (data!['stage2'] != null) {
+               if (data!['stage2'] != null && data!['stage2'] is Map) {
                  probs2 = safeParseProbs(data!['stage2']['probabilities']);
                }
-               if (data!['stage3'] != null) {
+               if (data!['stage3'] != null && data!['stage3'] is Map) {
                  probs3 = safeParseProbs(data!['stage3']['probabilities']);
                }
                
-               // Fallback: if no stages, check merged probabilities
+               // Fallback: if no stages found but 'probabilities' exists (Legacy/Flat history)
                if (probs1.isEmpty && probs2.isEmpty && probs3.isEmpty && data!['probabilities'] != null) {
-                 // Throw it all in one if that's all we have
-                 probs3 = Map<String, double>.from(data!['probabilities']);
+                 probs3 = safeParseProbs(data!['probabilities']);
                }
             }
 
@@ -246,38 +236,7 @@ class ClassificationResultModal extends StatelessWidget {
                  if (probs2.isNotEmpty) _buildChartSection(context, "Stage 2: Primary Type", probs2),
                  if (probs3.isNotEmpty) _buildChartSection(context, "Stage 3: Subclass Details", probs3),
 
-                 // Display XAI Image if available
-                 if (xaiUrl != null) 
-                  Container(
-                    height: 200,
-                    width: double.infinity,
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: themeService.primaryColor.withOpacity(0.2)),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.network(
-                        xaiUrl,
-                        fit: BoxFit.contain, // Fit logic changed to contain
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                             color: Colors.grey[200],
-                             child: Column(
-                               mainAxisAlignment: MainAxisAlignment.center,
-                               children: [
-                                 const Icon(Icons.broken_image, size: 40, color: Colors.grey),
-                                 const SizedBox(height: 8),
-                                 Text('Could not load visualization\nfrom $xaiUrl', 
-                                      textAlign: TextAlign.center, style: const TextStyle(fontSize: 10)),
-                               ],
-                             ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
+
               ],
             );
           },
@@ -313,21 +272,15 @@ class ClassificationResultModal extends StatelessWidget {
       );
 
       final pdfBytes = await PdfGenerationService.generateReport(state);
+      final fileName = 'GeoLab_Report_${DateTime.now().millisecondsSinceEpoch}.pdf';
       
-      final tempDir = await getTemporaryDirectory();
-      final file = io.File('${tempDir.path}/GeoLab_Report_${DateTime.now().millisecondsSinceEpoch}.pdf');
-      await file.writeAsBytes(pdfBytes);
+      await PdfHandler.handlePdf(pdfBytes, fileName);
       
-      await Share.shareXFiles(
-        [XFile(file.path)],
-        text: 'Here is my Rock Analysis Report from GeoLab.',
-      );
-      
-    } catch (e) {
-      print('Error sharing PDF: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to share PDF: $e')),
-      );
-    }
+      } catch (e) {
+        print('Error sharing PDF: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(ErrorHandler.getFriendlyErrorMessage(e))),
+        );
+      }
   }
 }

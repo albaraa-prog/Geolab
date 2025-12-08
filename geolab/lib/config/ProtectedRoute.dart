@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolab/features/Auth/Bloc/auth_bloc.dart';
 import 'package:geolab/features/Auth/Bloc/auth_state.dart';
+import 'package:geolab/utils/SplashScreen.dart';
 import 'package:go_router/go_router.dart';
 
 class ProtectedRoute extends StatelessWidget {
@@ -20,18 +21,9 @@ class ProtectedRoute extends StatelessWidget {
       child: BlocBuilder<AuthBloc, AuthState>(
         builder: (context, state) {
           if (state is AuthLoading) {
-            return const Scaffold(
-              body: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text('Checking authentication...'),
-                  ],
-                ),
-              ),
-            );
+          if (state is AuthLoading) {
+            return const SplashScreen();
+          }
           }
 
           if (state is AuthAuthenticated) {
