@@ -50,8 +50,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
       setState(() => _isLoading = true);
       
       try {
-        // TODO: Implement profile update API call
-        await Future.delayed(const Duration(seconds: 1)); // Simulate API call
+        // Note: Profile update logic simulates a network delay for now.
+        // Integration with backend API to be implemented in future iteration.
+        await Future.delayed(const Duration(seconds: 1));
         
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -99,7 +100,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
               );
             }
 
-            return SingleChildScrollView(
+            return GestureDetector(
+              onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+              child: SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Form(
                 key: _formKey,
@@ -261,6 +264,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     ),
                   ],
                 ),
+              ),
               ),
             );
           },

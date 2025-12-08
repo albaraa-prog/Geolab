@@ -47,6 +47,8 @@ class ApiService {
         // Initialize retry count if not present
         options.extra['retryCount'] = options.extra['retryCount'] ?? 0;
 
+
+
         handler.next(options);
       },
       onError: (error, handler) async {
@@ -95,7 +97,7 @@ class ApiService {
           // Increment retry count
           error.requestOptions.extra['retryCount'] = retryCount + 1;
           
-          print('Retrying request (attempt ${retryCount + 1}/$maxRetries) after ${delaySeconds}s delay');
+
           
           try {
             // Retry the request
@@ -110,7 +112,7 @@ class ApiService {
           }
         }
 
-        print('API Error: ${error.message}');
+
         handler.next(error);
       },
     ));
@@ -201,7 +203,7 @@ class ApiService {
       // If we can't check, assume it doesn't exist to allow registration
       return false;
     } catch (e) {
-      print('Error checking email: $e');
+
       // If we can't check, assume it doesn't exist to allow registration
       return false;
     }
@@ -266,7 +268,7 @@ class ApiService {
     try {
       await SupabaseService.signOut();
     } catch (e) {
-      print('Logout failed: $e');
+
     } finally {
       await _deleteToken();
     }
@@ -312,7 +314,7 @@ class ApiService {
         lastLogin: lastLogin,
       );
     } catch (e) {
-      print('Error getting current user: $e');
+
       return null;
     }
   }
@@ -350,22 +352,22 @@ class ApiService {
         );
       }
       
-      print('Uploading image to Supabase Storage: ${imageFile.path}');
+
 
       final user = SupabaseService.currentUser;
       if (user == null) {
         throw Exception('Authentication required');
       }
 
-      // Step 1: Upload image to Supabase Storage
+      // Upload image to Supabase Storage to get accessible URL
       final imageUrl = await SupabaseService.uploadImage(
         userId: user.id,
         imageFile: imageFile,
       );
       
-      print('Image uploaded to Supabase Storage: $imageUrl');
 
-      // Step 2: Send image URL to Flask API for ML prediction
+
+      // Request prediction from ML backend using the image URL
       final token = await _getToken();
       if (token == null) {
         throw Exception('Authentication required');
@@ -384,24 +386,23 @@ class ApiService {
             'Authorization': 'Bearer $token',
           },
           validateStatus: (status) {
-            print('Response status: $status');
+
             return status! < 500;
           },
         ),
       );
 
-      print('Response: ${response.data}');
+
 
       if (response.statusCode == 200 && response.data != null) {
         try {
           // Backend wraps response in {data: {...}, success: true}
           // Extract the actual prediction data
           final predictionData = response.data['data'] ?? response.data;
-          print('Prediction data: $predictionData');
+
           return PredictionModel.fromJson(predictionData);
         } catch (e) {
-          print('Error parsing response: $e');
-          print('Response data: ${response.data}');
+
           throw Exception('Failed to parse prediction result');
         }
       }
@@ -415,7 +416,7 @@ class ApiService {
       throw Exception(response.data?['error'] ??
           'Prediction failed with status ${response.statusCode}');
     } catch (e) {
-      print('Error in predictRockType: $e');
+
       rethrow;
     }
   }
@@ -448,23 +449,23 @@ class ApiService {
         );
       }
       
-      print('Uploading image bytes to Supabase Storage: $fileName');
+
 
       final user = SupabaseService.currentUser;
       if (user == null) {
         throw Exception('Authentication required');
       }
 
-      // Step 1: Upload image bytes to Supabase Storage
+      // Upload image bytes to Supabase Storage
       final imageUrl = await SupabaseService.uploadImageBytes(
         userId: user.id,
         imageBytes: imageBytes,
         fileName: fileName,
       );
       
-      print('Image uploaded to Supabase Storage: $imageUrl');
 
-      // Step 2: Send image URL to Flask API for ML prediction
+
+      // Request prediction from ML backend using the uploaded image URL
       final token = await _getToken();
       if (token == null) {
         throw Exception('Authentication required');
@@ -482,25 +483,21 @@ class ApiService {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer $token',
           },
-          validateStatus: (status) {
-            print('Response status: $status');
-            return status! < 500;
-          },
+
         ),
       );
 
-      print('Response: ${response.data}');
+
 
       if (response.statusCode == 200 && response.data != null) {
         try {
           // Backend wraps response in {data: {...}, success: true}
           // Extract the actual prediction data
           final predictionData = response.data['data'] ?? response.data;
-          print('Prediction data: $predictionData');
+
           return PredictionModel.fromJson(predictionData);
         } catch (e) {
-          print('Error parsing response: $e');
-          print('Response data: ${response.data}');
+
           throw Exception('Failed to parse prediction result');
         }
       }
@@ -514,7 +511,7 @@ class ApiService {
       throw Exception(response.data?['error'] ??
           'Prediction failed with status ${response.statusCode}');
     } catch (e) {
-      print('Error in predictRockTypeFromBytes: $e');
+
       rethrow;
     }
   }
@@ -546,7 +543,7 @@ class ApiService {
     }
   }
 
-  Future<List<PredictionModel>> getMyPredictions() async {
+  Future<List<PredictionModel>> getMyPredictions({int page = 1, int limit = 10}) async {
     try {
       final token = await _getToken();
       if (token == null) {
@@ -555,6 +552,10 @@ class ApiService {
 
       final response = await _dio.get(
         '$baseUrl/predictions/me',
+        queryParameters: {
+          'page': page,
+          'limit': limit,
+        },
         options: Options(
           headers: {'Authorization': 'Bearer $token'},
         ),
@@ -590,7 +591,7 @@ class ApiService {
     
     // Backend serves files at /api/uploads/ (keep the /api part)
     final result = '$baseUrl/$finalPath';
-    print('🔍 buildFileUrl: input="$relativePath" -> output="$result"');
+
     return result;
   }
 
@@ -661,7 +662,7 @@ class ApiService {
       );
 
       if (response.statusCode == 200) {
-        print('🔍 XAI Response: ${response.data}');
+
         return {
           'explanation': response.data['explanation'] ?? response.data['reasoning'] ?? 'No explanation available.',
           'xai_visualization': response.data['xai_visualization'], // Relative path from backend
@@ -672,7 +673,7 @@ class ApiService {
         };
       } else {
         // Fallback on API error
-        print('XAI API Error: ${response.statusCode} - ${response.data}');
+
         final conf = (confidence * 100).toStringAsFixed(1);
         return {
            'explanation': 'Predicted $predictedClass with $conf% confidence. (Detailed explanation unavailable)',
@@ -680,7 +681,7 @@ class ApiService {
          };
       }
     } catch (e) {
-      print('XAI Service Error: $e');
+
       final conf = (confidence * 100).toStringAsFixed(1);
       return {
           'explanation': 'Predicted $predictedClass with $conf% confidence.',
@@ -1104,7 +1105,7 @@ class ApiService {
       // First check if device has internet connectivity
       final isConnected = await _networkService.checkConnectivity();
       if (!isConnected) {
-        print('No internet connection available');
+        // No internet connection available
         return false;
       }
 
@@ -1118,7 +1119,8 @@ class ApiService {
       );
       return response.statusCode == 200;
     } catch (e) {
-      print('Connection test failed: $e');
+      // Connection test failed
+    }
       return false;
     }
   }
@@ -1162,6 +1164,6 @@ class ApiService {
           return 'Connection error. Please check your internet connection.';
         }
         return 'Network error. Please check your connection.';
-    }
   }
-} // End of class
+}
+

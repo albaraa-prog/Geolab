@@ -59,7 +59,7 @@ void cleanResetPasswordUrl() {
     }
   } catch (e) {
     // Ignore errors in URL cleaning
-    print('Error cleaning reset password URL: $e');
+
   }
 }
 

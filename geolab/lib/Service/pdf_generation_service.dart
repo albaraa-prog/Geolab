@@ -50,7 +50,7 @@ class PdfGenerationService {
         final bytes = await state.image!.readAsBytes();
         pdfImage = pw.MemoryImage(bytes);
       } catch (e) {
-        print('Error loading image for PDF: $e');
+
       }
     }
 

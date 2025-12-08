@@ -23,7 +23,7 @@ class NetworkService {
         _connectivity.onConnectivityChanged.listen((results) {
       _isConnected =
           results.isNotEmpty && results.first != ConnectivityResult.none;
-      print('Network connectivity changed: $_isConnected');
+
     });
   }
 
@@ -34,7 +34,7 @@ class NetworkService {
           results.isNotEmpty && results.first != ConnectivityResult.none;
       return _isConnected;
     } catch (e) {
-      print('Error checking connectivity: $e');
+
       _isConnected = false;
       return false;
     }

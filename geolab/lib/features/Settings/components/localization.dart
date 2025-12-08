@@ -39,7 +39,7 @@ class LocalizationService extends ChangeNotifier {
       _translations = json.decode(jsonString);
       _isInitialized = true;
       notifyListeners();
-      print('Translations loaded successfully for ${_currentLocale.languageCode}');
+      // Translations loaded successfully
     } catch (e) {
       // If loading fails, try to load English as fallback
       try {
@@ -47,14 +47,14 @@ class LocalizationService extends ChangeNotifier {
           'assets/translations/en.json',
         );
         _translations = json.decode(fallbackJsonString);
-        print('Fallback translations loaded for English');
+        // Fallback translations loaded
       } catch (fallbackError) {
-        print('Failed to load fallback translations: $fallbackError');
+        // Failed to load fallback translations
         _translations = {};
       }
       _isInitialized = true;
       notifyListeners();
-      print('Failed to load translations for ${_currentLocale.languageCode}: $e');
+      // Failed to load translations
     }
   }
 
@@ -92,7 +92,7 @@ class LocalizationService extends ChangeNotifier {
         value = value[k];
       } else {
         // If not found, return the key itself
-        print('Translation key not found: $key');
+        return key;
         return key.split('.').last;
       }
     }

@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolab/Service/api_service.dart';
 import 'package:geolab/Service/network_service.dart';
+import 'dart:io' as io;
+import 'package:geolab/config/app_config.dart';
 import 'package:geolab/config/localization_config.dart';
 import 'package:geolab/config/router.dart';
 import 'package:geolab/config/theme.dart';
@@ -24,116 +27,87 @@ bool get isRecoveryMode => _isRecoveryMode;
 void setRecoveryMode(bool value) => _isRecoveryMode = value;
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  // Catch global async errors (outside Flutter context)
+  runZonedGuarded<Future<void>>(() async {
+    WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment variables from .env file
-  bool envLoaded = false;
-  try {
-    // For Android/iOS, .env needs to be loaded from assets
-    // For web/desktop, it can be loaded from root
+    // Global Error Handling for Flutter Framework Errors
+    FlutterError.onError = (FlutterErrorDetails details) {
+      FlutterError.presentError(details);
+      // Note: In production, submit to Crashlytics here
+    };
+
+    // Load environment variables from .env file
+    bool envLoaded = false;
     try {
-      await dotenv.load(fileName: ".env");
-      print('✓ .env file loaded from root directory');
-      envLoaded = true;
-    } catch (e1) {
-      print('⚠ Could not load .env from root: $e1');
+      // For Android/iOS, .env needs to be loaded from assets
+      // For web/desktop, it can be loaded from root
       try {
-        // Try loading from assets (for mobile platforms)
-        await dotenv.load(fileName: "assets/.env");
-        print('✓ .env file loaded from assets');
+        await dotenv.load(fileName: ".env");
         envLoaded = true;
-      } catch (e2) {
-        print('⚠ Could not load .env from assets: $e2');
-        // Last attempt - try without path prefix
+      } catch (e1) {
         try {
-          await dotenv.load();
-          print('✓ .env file loaded (default location)');
+          await dotenv.load(fileName: "assets/.env");
           envLoaded = true;
-        } catch (e3) {
-          print('❌ Could not load .env from any location: $e3');
+        } catch (e2) {
+          try {
+            await dotenv.load();
+            envLoaded = true;
+          } catch (e3) {
+            // Silent failure
+          }
         }
       }
-    }
-    
-    if (envLoaded) {
-      // Validate that keys are loaded
-      final url = dotenv.env['SUPABASE_URL'];
-      final key = dotenv.env['SUPABASE_ANON_KEY'];
       
-      if (url == null || url.isEmpty || url == 'YOUR_SUPABASE_URL') {
-        print('⚠ WARNING: SUPABASE_URL is not set in .env file');
-        print('   Current value: ${url ?? "null"}');
-        envLoaded = false;
-      } else {
-        print('✓ SUPABASE_URL loaded: ${url.substring(0, url.length > 30 ? 30 : url.length)}...');
+      if (envLoaded) {
+        // Validate that keys are loaded
+        final url = dotenv.env['SUPABASE_URL'];
+        final key = dotenv.env['SUPABASE_ANON_KEY'];
+        
+        if (url == null || url.isEmpty || url == 'YOUR_SUPABASE_URL') {
+          envLoaded = false;
+        } 
+        
+        if (key == null || key.isEmpty || key == 'YOUR_SUPABASE_ANON_KEY') {
+          envLoaded = false;
+        }
       }
-      
-      if (key == null || key.isEmpty || key == 'YOUR_SUPABASE_ANON_KEY') {
-        print('⚠ WARNING: SUPABASE_ANON_KEY is not set in .env file');
-        print('   Current value: ${key != null && key.length > 20 ? "${key.substring(0, 20)}..." : key ?? "null"}');
-        envLoaded = false;
-      } else {
-        print('✓ SUPABASE_ANON_KEY loaded: ${key.substring(0, key.length > 20 ? 20 : key.length)}...');
-      }
+    } catch (e) {
+      envLoaded = false;
     }
-  } catch (e) {
-    print('❌ ERROR: Could not load .env file: $e');
-    envLoaded = false;
-  }
-  
-  if (!envLoaded) {
-    print('');
-    print('⚠ WARNING: .env file could not be loaded properly.');
-    print('Please make sure:');
-    print('1. The .env file exists in geolab/.env');
-    print('2. The .env file is listed in pubspec.yaml assets (it should be)');
-    print('3. Run "flutter clean && flutter pub get" after creating/modifying .env');
-    print('4. Restart the app completely');
-    print('');
-  }
 
-  // Initialize Supabase - MUST complete before creating services
-  bool supabaseInitialized = false;
-  try {
-    await SupabaseService.initialize();
-    supabaseInitialized = true;
-    print('✓ Supabase initialized successfully');
-    
-    // Set up auth listener IMMEDIATELY after init to catch PASSWORD_RECOVERY event
-    // This MUST happen before runApp() to catch the deep link processing
-    SupabaseService.client?.auth.onAuthStateChange.listen((data) {
-      // Check for PASSWORD_RECOVERY event - this fires when user clicks reset link
-      if (data.event == AuthChangeEvent.passwordRecovery) {
-        setRecoveryMode(true);
-      }
-    });
-    
-    // Give Supabase a moment to process any deep links and fire events
-    await Future.delayed(const Duration(milliseconds: 100));
-    
-  } catch (e) {
-    print('❌ ERROR initializing Supabase: $e');
-    print('');
-    print('Common issues:');
-    print('1. .env file is missing or in wrong location (should be in geolab/.env)');
-    print('2. SUPABASE_URL or SUPABASE_ANON_KEY are incorrect');
-    print('3. Check your Supabase project settings at https://app.supabase.com');
-    print('');
-    // If Supabase fails to initialize, the app will still run but auth features won't work
-    // This allows the app to start and show error messages to the user
-  }
-  
-  if (!supabaseInitialized) {
-    print('⚠ WARNING: App is running without Supabase. Authentication features will not work.');
-  }
 
-  // Initialize services
-  await LocalizationService.instance.loadTranslations();
+    // Initialize Supabase - MUST complete before creating services
+    try {
+      await SupabaseService.initialize();
+      
+      // Set up auth listener IMMEDIATELY after init to catch PASSWORD_RECOVERY event
+      // This MUST happen before runApp() to catch the deep link processing
+      SupabaseService.client?.auth.onAuthStateChange.listen((data) {
+        // Check for PASSWORD_RECOVERY event - this fires when user clicks reset link
+        if (data.event == AuthChangeEvent.passwordRecovery) {
+          setRecoveryMode(true);
+        }
+      });
+      
+      // Give Supabase a moment to process any deep links and fire events
+      await Future.delayed(const Duration(milliseconds: 100));
+      
+    } catch (e) {
+      // If Supabase fails to initialize, the app will still run but auth features won't work
+    }
   
-  // Initialize network service
-  await NetworkService().initialize();
 
-  runApp(const GeolabApp());
+    // Initialize services
+    await LocalizationService.instance.loadTranslations();
+    
+    // Initialize network service
+    await NetworkService().initialize();
+
+    runApp(const GeolabApp());
+  }, (error, stack) {
+    // Catch global async errors
+  });
 }
 
 class GeolabApp extends StatelessWidget {

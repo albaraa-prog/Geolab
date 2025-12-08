@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart'; // Import flutter_animate
 import 'package:geolab/config/theme.dart';
 import 'package:geolab/utils/responsive_layout.dart';
-
+import 'package:flutter_svg/flutter_svg.dart';
 class SplashScreen extends StatelessWidget {
   const SplashScreen({Key? key}) : super(key: key);
 
@@ -27,13 +27,13 @@ class SplashScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Logo with Scale and Fade animation
-            Image.asset(
-              'assets/images/rock_logo.png',
-              width: ResponsiveLayout.getResponsiveIconSize(context,
-                  mobile: 180, tablet: 220, desktop: 260),
-              height: ResponsiveLayout.getResponsiveIconSize(context,
-                  mobile: 180, tablet: 220, desktop: 260),
-            )
+              SvgPicture.asset(
+                'assets/images/rock_logo.svg',
+                width: ResponsiveLayout.getResponsiveIconSize(context,
+                    mobile: 200, tablet: 240, desktop: 300),
+                height: ResponsiveLayout.getResponsiveIconSize(context,
+                    mobile: 200, tablet: 240, desktop: 300),
+              )
             .animate()
             .fade(duration: 800.ms, curve: Curves.easeOut)
             .scale(begin: const Offset(0.8, 0.8), end: const Offset(1.0, 1.0), duration: 800.ms, curve: Curves.easeOutBack),

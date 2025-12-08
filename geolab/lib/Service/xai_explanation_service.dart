@@ -96,7 +96,7 @@ class XaiExplanationService {
            }
         }
       } catch (e) {
-        print('Error parsing probabilities in XAI Service: $e');
+
       }
           
       if (probabilities.isEmpty) return state.additionalData?['reasoning'] ?? 'No data available.';

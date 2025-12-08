@@ -41,7 +41,7 @@ final router = GoRouter(
           // If in recovery mode, FORCE redirect to reset-password if trying to go to home
           // This prevents the router from falling back to '/' after auth state changes
           if (currentPath == '/') {
-            print('🔍 Router: Recovery mode active & path is /, forcing redirect to /reset-password');
+
             return '/reset-password';
           }
         }
@@ -75,10 +75,9 @@ final router = GoRouter(
       final authState = authBloc.state;
 
       // Handle loading state - stay on splash
+      // Handle loading state - only stay on splash if already there
       if (authState is AuthLoading || authState is AuthInitial) {
-        if (currentPath != '/splash') {
-          return '/splash';
-        }
+        // Do NOT force redirect to splash if we are elsewhere (e.g. logging in)
         return null;
       }
       
@@ -108,7 +107,7 @@ final router = GoRouter(
 
       return null;
     } catch (e) {
-      print('🔍 Router: ERROR in redirect function: $e');
+
       return null;
     }
   },

@@ -26,7 +26,10 @@
     "retry": "Retry",
     "ok": "OK",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "usage": "Usage",
+    "errorHistory": "Error loading history.\nCheck connection.",
+    "comingSoon": "Coming Soon"
   },
   "navigation": {
     "home": "Home",
@@ -202,4 +205,4 @@
     "submit": "Submit Feedback",
     "improveModel": "Help improve our model"
   }
-} 
+}

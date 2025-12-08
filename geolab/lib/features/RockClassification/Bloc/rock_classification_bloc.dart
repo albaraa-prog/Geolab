@@ -70,7 +70,7 @@ class RockClassificationBloc
         final imageFile = await currentState.controller.takePicture();
         final image = io.File(imageFile.path);
         emit(ImageCaptured(image));
-        // Removed automatic classification - user must press Classify button
+        // Await manual classification trigger from user
       } catch (e) {
         emit(CameraError('Error capturing image: $e'));
       }
@@ -87,7 +87,7 @@ class RockClassificationBloc
       if (pickedFile != null) {
         final image = io.File(pickedFile.path);
         emit(ImageCaptured(image));
-        // Removed automatic classification - user must press Classify button
+        // Await manual classification trigger from user
       }
     } catch (e) {
       emit(CameraError('Error picking image: $e'));
@@ -101,15 +101,12 @@ class RockClassificationBloc
     emit(Classifying(event.image)); // File-based for mobile
     try {
       // Check if user is authenticated
-      // BYPASS AUTH CHECK FOR TESTING
-      /*
-      final isAuthenticated = await _apiService.isAuthenticated();
-      if (!isAuthenticated) {
+      final user = await _apiService.getCurrentUser();
+      if (user == null) {
         emit(const ClassificationError(
             'Please log in to use rock classification'));
         return;
       }
-      */
 
       // Check subscription status
       try {
@@ -122,7 +119,7 @@ class RockClassificationBloc
         }
       } catch (e) {
         // If we can't get subscription status, continue with classification
-        print('Warning: Could not verify subscription status: $e');
+
       }
 
       // Validate image file exists and is readable
@@ -139,7 +136,7 @@ class RockClassificationBloc
         additionalData: result.additionalData,
       ));
     } catch (e) {
-      print('Classification error: $e');
+
       String errorMessage = e.toString();
       
       // Provide user-friendly error messages
@@ -165,15 +162,12 @@ class RockClassificationBloc
     try {
       emit(const Classifying(null));
       // Check if user is authenticated
-      // BYPASS AUTH CHECK FOR TESTING
-      /*
-      final isAuthenticated = await _apiService.isAuthenticated();
-      if (!isAuthenticated) {
+      final user = await _apiService.getCurrentUser();
+      if (user == null) {
         emit(const ClassificationError(
             'Please log in to use rock classification'));
         return;
       }
-      */
 
       // Check subscription status
       try {
@@ -186,7 +180,7 @@ class RockClassificationBloc
         }
       } catch (e) {
         // If we can't get subscription status, continue with classification
-        print('Warning: Could not verify subscription status: $e');
+
       }
 
       // Validate image size (max 10MB)
@@ -209,7 +203,7 @@ class RockClassificationBloc
         additionalData: result.additionalData,
       ));
     } catch (e) {
-      print('Classification error: $e');
+
       String errorMessage = e.toString();
       
       // Provide user-friendly error messages

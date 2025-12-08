@@ -15,7 +15,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:geolab/utils/error_handler.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-
+import 'package:flutter_svg/flutter_svg.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -140,12 +140,12 @@ class _SignUpPageState extends State<SignUpPage> {
                     height: ResponsiveLayout.getResponsiveSpacing(context,
                         mobile: 40, tablet: 60, desktop: 80)),
                 // Logo or App Title
-                Image.asset(
-                  'assets/images/rock_logo.png',
+                SvgPicture.asset(
+                  'assets/images/rock_logo.svg',
                   width: ResponsiveLayout.getResponsiveIconSize(context,
-                      mobile: 200, tablet: 250, desktop: 300),
+                      mobile: 200, tablet: 240, desktop: 280),
                   height: ResponsiveLayout.getResponsiveIconSize(context,
-                      mobile: 200, tablet: 250, desktop: 300),
+                      mobile: 200, tablet: 240, desktop: 280),
                 ),
                 SizedBox(
                     height: ResponsiveLayout.getResponsiveSpacing(context,
@@ -531,10 +531,10 @@ class _SignUpPageState extends State<SignUpPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Image.asset(
-                      'assets/images/rock_logo.png',
-                      width: 350,
-                      height: 350,
+                    SvgPicture.asset(
+                      'assets/images/rock_logo.svg',
+                      width: 300,
+                      height: 300,
                     ),
                     const SizedBox(height: 24),
                     const Text(

@@ -49,7 +49,7 @@ class SubscriptionService {
       final subscription = await getSubscriptionStatus();
       return subscription.canMakeRequests;
     } catch (e) {
-      print('Error checking if user can make request: $e');
+
       return false;
     }
   }
@@ -60,7 +60,7 @@ class SubscriptionService {
       final subscription = await getSubscriptionStatus();
       return subscription.remainingRequests;
     } catch (e) {
-      print('Error getting remaining requests: $e');
+
       return 0;
     }
   }

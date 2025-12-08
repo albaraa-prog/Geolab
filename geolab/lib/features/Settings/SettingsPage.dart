@@ -138,7 +138,8 @@ class SettingsPage extends StatelessWidget {
                 const SizedBox(height: 8),
                 if (isAuthed)
                   FutureBuilder<SubscriptionModel>(
-                    future: subscriptionService.getSubscriptionStatus(),
+                    // future: subscriptionService.getSubscriptionStatus(),
+                    future: Future.error('Disabled'),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return Text(
@@ -328,26 +329,7 @@ class SettingsPage extends StatelessWidget {
                           .translate('settings.subscription.title'),
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: themeService.warningColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: themeService.warningColor.withOpacity(0.3),
-                          width: 1,
-                        ),
-                      ),
-                      child: Text(
-                        'Coming Soon',
-                        style: TextStyle(
-                          color: themeService.warningColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 10,
-                        ),
-                      ),
-                    ),
+
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -378,7 +360,8 @@ class SettingsPage extends StatelessWidget {
               }
 
               return FutureBuilder<SubscriptionModel>(
-                future: subscriptionService.getSubscriptionStatus(),
+                // future: subscriptionService.getSubscriptionStatus(),
+                future: Future.error('Coming Soon'), // Force error state
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return Padding(
@@ -405,7 +388,7 @@ class SettingsPage extends StatelessWidget {
                       padding: const EdgeInsets.all(16),
                       child: Center(
                         child: Text(
-                          localizationService.translate('settings.subscription.error'),
+                          localizationService.translate('common.comingSoon'),
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                           ),

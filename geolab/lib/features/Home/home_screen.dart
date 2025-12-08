@@ -91,7 +91,7 @@ class _HomePageState extends State<HomePage> {
         });
       }
     } catch (e) {
-      print('Error checking connectivity: $e');
+
     }
   }
 

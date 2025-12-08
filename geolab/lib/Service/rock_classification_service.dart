@@ -28,7 +28,7 @@ class RockClassificationServiceImpl implements RockClassificationService {
           await _apiService.predictRockType(image);
 
       // Removed overly strict validation - parsing already handles defaults
-      print('Parsed prediction: ${prediction.prediction}, confidence: ${prediction.confidence}');
+
 
 
       return RockClassification(
@@ -47,7 +47,7 @@ class RockClassificationServiceImpl implements RockClassificationService {
         },
       );
     } catch (e) {
-      print('Rock classification service error: $e');
+
       if (e.toString().contains('422') || e.toString().contains('Image processing failed')) {
         throw Exception('Image processing failed: ${e.toString()}');
       }
@@ -69,7 +69,7 @@ class RockClassificationServiceImpl implements RockClassificationService {
           await _apiService.predictRockTypeFromBytes(imageBytes, fileName);
 
       // Removed overly strict validation - parsing already handles defaults
-      print('Parsed prediction: ${prediction.prediction}, confidence: ${prediction.confidence}');
+
 
 
       return RockClassification(
@@ -88,7 +88,7 @@ class RockClassificationServiceImpl implements RockClassificationService {
         },
       );
     } catch (e) {
-      print('Rock classification service error: $e');
+
       if (e.toString().contains('422') || e.toString().contains('Image processing failed')) {
         throw Exception('Image processing failed: ${e.toString()}');
       }

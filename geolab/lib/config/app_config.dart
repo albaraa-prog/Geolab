@@ -8,7 +8,7 @@ class AppConfig {
     try {
       final url = dotenv.env['SUPABASE_URL'];
       if (url == null || url.isEmpty || url == 'YOUR_SUPABASE_URL') {
-        print('⚠ WARNING: SUPABASE_URL is not configured in .env file');
+
         throw Exception(
           'SUPABASE_URL is not configured. Please create a .env file in the geolab directory with:\n'
           'SUPABASE_URL=https://your-project.supabase.co\n'
@@ -18,7 +18,7 @@ class AppConfig {
       }
       return url;
     } catch (e) {
-      print('⚠ ERROR getting SUPABASE_URL: $e');
+
       rethrow;
     }
   }
@@ -27,7 +27,7 @@ class AppConfig {
     try {
       final key = dotenv.env['SUPABASE_ANON_KEY'];
       if (key == null || key.isEmpty || key == 'YOUR_SUPABASE_ANON_KEY') {
-        print('⚠ WARNING: SUPABASE_ANON_KEY is not configured in .env file');
+
         throw Exception(
           'SUPABASE_ANON_KEY is not configured. Please create a .env file in the geolab directory with:\n'
           'SUPABASE_URL=https://your-project.supabase.co\n'
@@ -37,7 +37,7 @@ class AppConfig {
       }
       return key;
     } catch (e) {
-      print('⚠ ERROR getting SUPABASE_ANON_KEY: $e');
+
       rethrow;
     }
   }
@@ -53,19 +53,17 @@ class AppConfig {
         return url.endsWith('/api') ? url : '$url/api';
       }
     } catch (e) {
-      print('⚠ WARNING: Could not read FLASK_API_URL from .env: $e');
+
     }
     
     // 2. Handle Platform-specific defaults
     if (kIsWeb) {
       // Web always uses localhost (or relative path in prod)
       return 'http://localhost:8000/api';
-    } else if (Platform.isAndroid) {
-      // Android Emulator loopback
-      return 'http://10.0.2.2:8000/api';
     }
-    
     // 3. Default fallback (Windows, local, etc)
+    // NOTE: For Android, we are using 'adb reverse tcp:8000 tcp:8000'
+    // so localhost works correctly and is more stable than 10.0.2.2
     return 'http://localhost:8000/api';
   }
 

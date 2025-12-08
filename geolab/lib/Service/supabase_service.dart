@@ -64,7 +64,7 @@ class SupabaseService {
         // Access the client to verify initialization
         final _ = Supabase.instance.client;
         _isInitialized = true;
-        print('✓ Supabase client verified and ready');
+        _isInitialized = true;
       } catch (e) {
         throw Exception(
           'Supabase.initialize() completed but client is not accessible: $e'
@@ -208,7 +208,7 @@ class SupabaseService {
         await clientInstance.auth.signOut();
       }
     } catch (e) {
-      print('Error signing out: $e');
+
     }
   }
   

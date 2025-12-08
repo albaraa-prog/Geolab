@@ -42,11 +42,10 @@ class PredictionModel {
       if (input is Map) return Map<String, dynamic>.from(input);
       if (input is String) {
         try {
-          // Fix: Handle potentially double-encoded strings/escaped quotes
           final decoded = jsonDecode(input);
           if (decoded is Map) return Map<String, dynamic>.from(decoded);
         } catch (e) {
-          print('Error parsing JSON string in PredictionModel: $e');
+          // Error parsing JSON string
         }
       }
       return null;
@@ -93,6 +92,7 @@ class PredictionModel {
 
   String get confidencePercentage =>
       '${(confidence * 100).toStringAsFixed(1)}%';
+  
   bool get hasXaiVisualization =>
       xaiVisualization != null && xaiVisualization!.isNotEmpty;
 

@@ -277,7 +277,7 @@ class ClassificationResultModal extends StatelessWidget {
       await PdfHandler.handlePdf(pdfBytes, fileName);
       
       } catch (e) {
-        print('Error sharing PDF: $e');
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(ErrorHandler.getFriendlyErrorMessage(e))),
         );

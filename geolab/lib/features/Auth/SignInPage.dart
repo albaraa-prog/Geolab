@@ -15,7 +15,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:geolab/utils/error_handler.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-
+import 'package:flutter_svg/flutter_svg.dart';
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
 
@@ -315,10 +315,10 @@ class _SignInPageState extends State<SignInPage> {
                 // Don't navigate away if we're on reset-password page
                 final currentPath = Uri.base.path;
                 if (currentPath != '/reset-password') {
-                  print('🔍 SignInPage: Authenticated, navigating to home');
+
                   context.go('/');
                 } else {
-                  print('🔍 SignInPage: Authenticated but on reset-password, staying put');
+
                 }
               }
             },
@@ -489,10 +489,10 @@ class _SignInPageState extends State<SignInPage> {
                 // Don't navigate away if we're on reset-password page
                 final currentPath = Uri.base.path;
                 if (currentPath != '/reset-password') {
-                  print('🔍 SignInPage (magic link): Authenticated, navigating to home');
+
                   context.go('/');
                 } else {
-                  print('🔍 SignInPage (magic link): Authenticated but on reset-password, staying put');
+
                 }
               }
             },
@@ -729,7 +729,9 @@ class _SignInPageState extends State<SignInPage> {
         ),
         child: SafeArea(
           child: Center(
-            child: SingleChildScrollView(
+            child: GestureDetector(
+              onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+              child: SingleChildScrollView(
               padding: ResponsiveLayout.getResponsivePadding(context),
               child: ConstrainedBox(
                 constraints: BoxConstraints(
@@ -741,12 +743,12 @@ class _SignInPageState extends State<SignInPage> {
                     height: ResponsiveLayout.getResponsiveSpacing(context,
                         mobile: 40, tablet: 60, desktop: 80)),
                 // Logo or App Title
-                Image.asset(
-                  'assets/images/rock_logo.png',
+                SvgPicture.asset(
+                  'assets/images/rock_logo.svg',
                   width: ResponsiveLayout.getResponsiveIconSize(context,
-                      mobile: 200, tablet: 250, desktop: 300),
+                      mobile: 200, tablet: 240, desktop: 280),
                   height: ResponsiveLayout.getResponsiveIconSize(context,
-                      mobile: 200, tablet: 250, desktop: 300),
+                      mobile: 200, tablet: 240, desktop: 280),
                 ),
                 SizedBox(
                     height: ResponsiveLayout.getResponsiveSpacing(context,
@@ -803,8 +805,9 @@ class _SignInPageState extends State<SignInPage> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildTabletLayout() {
     return _buildMobileLayout(); // Use mobile layout for tablet for now
@@ -834,10 +837,10 @@ class _SignInPageState extends State<SignInPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Image.asset(
-                      'assets/images/rock_logo.png',
-                      width: 350,
-                      height: 350,
+                    SvgPicture.asset(
+                      'assets/images/rock_logo.svg',
+                      width: 300,
+                      height: 300,
                     ),
                     const SizedBox(height: 24),
                     const Text(

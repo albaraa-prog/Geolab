@@ -55,7 +55,7 @@ class _PasswordRecoveryBannerState extends State<PasswordRecoveryBanner> {
         }
       }
     } catch (e) {
-      print('Error checking password recovery state: $e');
+
     }
   }
 

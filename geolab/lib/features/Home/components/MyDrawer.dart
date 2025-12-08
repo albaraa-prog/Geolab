@@ -16,8 +16,105 @@ import 'package:geolab/features/Home/components/ClassificationResultModal.dart';
 import 'package:geolab/features/Home/components/ShimmerLoading.dart';
 import 'package:geolab/features/RockClassification/Bloc/rock_classification_state.dart';
 
-class MyDrawer extends StatelessWidget {
+class MyDrawer extends StatefulWidget {
   const MyDrawer({super.key});
+
+  @override
+  State<MyDrawer> createState() => _MyDrawerState();
+}
+
+class _MyDrawerState extends State<MyDrawer> {
+  final ScrollController _scrollController = ScrollController();
+  final List<PredictionModel> _history = [];
+  bool _isLoading = false;
+  bool _isLoadingMore = false;
+  bool _hasMore = true;
+  int _currentPage = 1;
+  static const int _limit = 10;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInitialData();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >= 
+        _scrollController.position.maxScrollExtent - 200 && // Load when near bottom
+        !_isLoadingMore && 
+        _hasMore) {
+      _loadMoreData();
+    }
+  }
+
+  Future<void> _loadInitialData() async {
+    if (_isLoading) return;
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final items = await ApiService().getMyPredictions(page: 1, limit: _limit);
+      if (mounted) {
+        setState(() {
+          _history.clear();
+          _history.addAll(items);
+          _hasMore = items.length >= _limit;
+          _currentPage = 1;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadMoreData() async {
+    if (_isLoadingMore) return;
+    setState(() {
+      _isLoadingMore = true;
+    });
+
+    try {
+      final nextPage = _currentPage + 1;
+      final items = await ApiService().getMyPredictions(page: nextPage, limit: _limit);
+      
+      if (mounted) {
+        setState(() {
+          if (items.isNotEmpty) {
+            _history.addAll(items);
+            _currentPage = nextPage;
+            _hasMore = items.length >= _limit;
+          } else {
+            _hasMore = false;
+          }
+          _isLoadingMore = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          // Don't show full error screen for load more, maybe snackbar?
+          // keeping silent or simple log for now to avoid disrupting UX
+          _isLoadingMore = false;
+        });
+      }
+    }
+  }
 
   void _showLogoutConfirmation(BuildContext context) {
     showDialog(
@@ -40,7 +137,7 @@ class MyDrawer extends StatelessWidget {
                 },
                 child: Text(
                   context.t('auth.logout.title'),
-                  style: const TextStyle(color: Colors.red),
+                  style: TextStyle(color: ThemeService.instance.errorColor),
                 ),
               ),
             ],
@@ -65,7 +162,6 @@ class MyDrawer extends StatelessWidget {
                   title: Text(context.t('navigation.settings')),
                   onTap: () {
                     Navigator.pop(context);
-                    // context.go('/settings');
                     Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -74,11 +170,11 @@ class MyDrawer extends StatelessWidget {
                   },
                 ),
                 ListTile(
-                  leading: const Icon(HugeIcons.strokeRoundedLogout01,
-                      color: Colors.red),
+                  leading: Icon(HugeIcons.strokeRoundedLogout01,
+                      color: ThemeService.instance.errorColor),
                   title: Text(
                     context.t('auth.logout.title'),
-                    style: const TextStyle(color: Colors.red),
+                    style: TextStyle(color: ThemeService.instance.errorColor),
                   ),
                   onTap: () => _showLogoutConfirmation(context),
                 ),
@@ -100,16 +196,13 @@ class MyDrawer extends StatelessWidget {
           children: [
             BlocBuilder<AuthBloc, AuthState>(
               builder: (context, authState) {
-
                 String displayName = context.t('settings.profile.userName');
                 String displayEmail = context.t('settings.profile.userEmail');
                 if (authState is AuthAuthenticated) {
                   final email = authState.user.email;
                   if (email.isNotEmpty) {
                     displayEmail = email;
-                    // Use actual name from user model, fallback to email prefix
-                    displayName = authState.user.name ?? 
-                        (email.split('@').first);
+                    displayName = authState.user.name ?? (email.split('@').first);
                   }
                 }
 
@@ -138,7 +231,7 @@ class MyDrawer extends StatelessWidget {
                 );
               },
             ),
-            // Dynamic usage summary card under header
+            // Usage summary
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
               child: FutureBuilder<SubscriptionModel>(
@@ -166,7 +259,7 @@ class MyDrawer extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text('Usage', style: Theme.of(context).textTheme.bodyLarge),
+                            Text(context.t('common.usage'), style: Theme.of(context).textTheme.bodyLarge),
                             Text('${used}/${total}')
                           ],
                         ),
@@ -181,64 +274,91 @@ class MyDrawer extends StatelessWidget {
                 },
               ),
             ),
-            // History list from backend
+            // History list
             Expanded(
-              child: FutureBuilder<List<PredictionModel>>(
-                future: ApiService().getMyPredictions(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const SidebarShimmerPlaceholder();
-                  }
-                  final items = snapshot.data ?? const <PredictionModel>[];
-                  if (items.isEmpty) {
-                    return Center(
-                      child: Text(
-                        context.t('navigation.historyEmpty'),
-                        style: TextStyle(color: themeService.textColor.withOpacity(0.6)),
+              child: _isLoading 
+                ? const SidebarShimmerPlaceholder()
+                : _errorMessage != null
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              context.t('common.errorHistory'),
+                              style: TextStyle(color: themeService.errorColor, fontSize: 13),
+                              textAlign: TextAlign.center,
+                            ),
+                            TextButton(
+                              onPressed: _loadInitialData,
+                              child: Text(context.t('common.retry'), style: TextStyle(color: themeService.primaryColor)),
+                            )
+                          ],
+                        ),
                       ),
-                    );
-                  }
-                  return ListView.separated(
-                    itemCount: items.length,
-                    separatorBuilder: (_, __) => const Divider(height: 1),
-                    itemBuilder: (context, index) {
-                      final p = items[index];
-                      return ListTile(
-                        leading: const Icon(HugeIcons.strokeRoundedTime04),
-                        title: Text(p.prediction),
-                        subtitle: Text('${p.confidencePercentage} • ${p.timestamp.toLocal()}'),
-                        onTap: () {
-                          showModalBottomSheet(
-                            context: context,
-                            backgroundColor: themeService.surfaceColor,
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                            ),
-                            builder: (context) => ClassificationResultModal(
-                              state: ClassificationComplete(
-                                rockType: p.prediction,
-                                confidence: p.confidence,
-                                image: null,
-                                additionalData: {
-                                  'xai_visualization': p.xaiVisualization,
-                                  'image_url': p.imagePath,
-                                  'probabilities': p.probabilities,
-                                  'confidence_breakdown': p.confidenceBreakdown,
-                                  'reasoning': p.reasoning,
-                                  'stage1': p.stage1,
-                                  'stage2': p.stage2,
-                                  'stage3': p.stage3,
-                                },
-                              ),
-                              themeService: themeService,
-                            ),
+                    )
+                  : _history.isEmpty
+                    ? Center(
+                        child: Text(
+                          context.t('navigation.historyEmpty'),
+                          style: TextStyle(color: themeService.textColor.withOpacity(0.6)),
+                        ),
+                      )
+                    : ListView.separated(
+                        controller: _scrollController,
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        itemCount: _history.length + (_isLoadingMore ? 1 : 0),
+                        separatorBuilder: (_, __) => const Divider(height: 1),
+                        itemBuilder: (context, index) {
+                          if (index == _history.length) {
+                             return const Padding(
+                               padding: EdgeInsets.all(16.0),
+                               child: Center(
+                                 child: SizedBox(
+                                   width: 24, 
+                                   height: 24, 
+                                   child: CircularProgressIndicator(strokeWidth: 2)
+                                 )
+                               ),
+                             );
+                          }
+                          
+                          final p = _history[index];
+                          return ListTile(
+                            leading: const Icon(HugeIcons.strokeRoundedTime04),
+                            title: Text(p.prediction),
+                            subtitle: Text('${p.confidencePercentage} • ${p.timestamp.toLocal()}'),
+                            onTap: () {
+                              showModalBottomSheet(
+                                context: context,
+                                backgroundColor: themeService.surfaceColor,
+                                shape: const RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                                ),
+                                builder: (context) => ClassificationResultModal(
+                                  state: ClassificationComplete(
+                                    rockType: p.prediction,
+                                    confidence: p.confidence,
+                                    image: null,
+                                    additionalData: {
+                                      'xai_visualization': p.xaiVisualization,
+                                      'image_url': p.imagePath,
+                                      'probabilities': p.probabilities,
+                                      'confidence_breakdown': p.confidenceBreakdown,
+                                      'reasoning': p.reasoning,
+                                      'stage1': p.stage1,
+                                      'stage2': p.stage2,
+                                      'stage3': p.stage3,
+                                    },
+                                  ),
+                                  themeService: themeService,
+                                ),
+                              );
+                            },
                           );
                         },
-                      );
-                    },
-                  );
-                },
-              ),
+                      ),
             ),
           ],
         ),
