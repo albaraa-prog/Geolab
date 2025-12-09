@@ -15,6 +15,8 @@ import 'package:geolab/utils/rtl_wrapper.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
@@ -36,9 +38,12 @@ class SettingsPage extends StatelessWidget {
           builder: (context, localizationService, themeService, child) {
             return BlocBuilder<SettingsBloc, SettingsState>(
               builder: (context, state) {
-                return ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
+                return Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: kIsWeb ? 800 : double.infinity),
+                    child: ListView(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                      children: [
                     const SizedBox(height: 20),
                     _buildProfileSection(context, localizationService),
                     const SizedBox(height: 30),
@@ -50,6 +55,8 @@ class SettingsPage extends StatelessWidget {
                     const SizedBox(height: 20),
                     _buildAboutSection(context, localizationService),
                   ],
+                    ),
+                  ),
                 );
               },
             );

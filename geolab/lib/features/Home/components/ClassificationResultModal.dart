@@ -68,7 +68,7 @@ class ClassificationResultModal extends StatelessWidget {
                       onPressed: () => _shareResult(context),
                       icon: const Icon(Icons.share_outlined, size: 18),
                       // Just hardcode Share for simplicity/safety vs localization map
-                      label: const Text('Save Analysis PDF'), 
+                      label: Text(context.t('rockClassification.saveAnalysisPdf')), 
                       style: OutlinedButton.styleFrom(
                         foregroundColor: themeService.primaryColor,
                         side: BorderSide(color: themeService.primaryColor),
@@ -129,7 +129,7 @@ class ClassificationResultModal extends StatelessWidget {
                    Icon(Icons.auto_awesome, size: 20, color: themeService.primaryColor),
                    const SizedBox(width: 8),
                    Text(
-                    'AI Analysis',
+                    context.t('rockClassification.aiAnalysis'),
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -232,9 +232,9 @@ class ClassificationResultModal extends StatelessWidget {
             return Column(
               children: [
                  // Display Charts Loop
-                 if (probs1.isNotEmpty) _buildChartSection(context, "Stage 1: Is it a rock?", probs1),
-                 if (probs2.isNotEmpty) _buildChartSection(context, "Stage 2: Primary Type", probs2),
-                 if (probs3.isNotEmpty) _buildChartSection(context, "Stage 3: Subclass Details", probs3),
+                 if (probs1.isNotEmpty) _buildChartSection(context, context.t('rockClassification.stage1'), probs1),
+                 if (probs2.isNotEmpty) _buildChartSection(context, context.t('rockClassification.stage2'), probs2),
+                 if (probs3.isNotEmpty) _buildChartSection(context, context.t('rockClassification.stage3'), probs3),
 
 
               ],
@@ -276,8 +276,9 @@ class ClassificationResultModal extends StatelessWidget {
       
       await PdfHandler.handlePdf(pdfBytes, fileName);
       
-      } catch (e) {
-
+      } catch (e, stack) {
+        print("Error sharing PDF: $e");
+        print(stack);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(ErrorHandler.getFriendlyErrorMessage(e))),
         );

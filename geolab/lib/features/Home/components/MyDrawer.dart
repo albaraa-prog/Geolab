@@ -12,6 +12,7 @@ import 'package:geolab/utils/app_localizations.dart';
 import 'package:geolab/utils/rtl_wrapper.dart';
 import 'package:geolab/Service/theme_service.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:provider/provider.dart';
 import 'package:geolab/features/Home/components/ClassificationResultModal.dart';
 import 'package:geolab/features/Home/components/ShimmerLoading.dart';
 import 'package:geolab/features/RockClassification/Bloc/rock_classification_state.dart';
@@ -188,7 +189,7 @@ class _MyDrawerState extends State<MyDrawer> {
 
   @override
   Widget build(BuildContext context) {
-    final themeService = ThemeService.instance;
+    final themeService = Provider.of<ThemeService>(context);
     return RTLWrapper(
       child: Drawer(
         backgroundColor: themeService.surfaceColor,
@@ -326,7 +327,11 @@ class _MyDrawerState extends State<MyDrawer> {
                           
                           final p = _history[index];
                           return ListTile(
-                            leading: const Icon(HugeIcons.strokeRoundedTime04),
+                            leading: HugeIcon(
+                                icon: HugeIcons.strokeRoundedTransactionHistory,
+                                size: 24.0,
+                                color: themeService.textColor,
+                            ),
                             title: Text(p.prediction),
                             subtitle: Text('${p.confidencePercentage} • ${p.timestamp.toLocal()}'),
                             onTap: () {

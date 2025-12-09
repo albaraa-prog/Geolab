@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io' as io;
 
 import 'package:camera/camera.dart';
+import 'package:lottie/lottie.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -464,60 +465,31 @@ class _HomePageState extends State<HomePage> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Pulsing animation container
-                      TweenAnimationBuilder<double>(
-                        tween: Tween(begin: 0.8, end: 1.2),
-                        duration: const Duration(milliseconds: 800),
-                        builder: (context, scale, child) {
-                          return Transform.scale(
-                            scale: scale,
-                            child: Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.1),
-                                shape: BoxShape.circle,
+                      // Lottie Animation
+                      // Lottie Animation
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Lottie.asset(
+                          'assets/animations/uploading_image.json',
+                          width: 350,
+                          height: 350,
+                          delegates: LottieDelegates(
+                            values: [
+                              ValueDelegate.color(
+                                const ['**'],
+                                value: _themeService.primaryColor,
                               ),
-                              child: CircularProgressIndicator(
-                                color: _themeService.primaryColor,
-                                strokeWidth: 3,
+                              ValueDelegate.strokeColor(
+                                const ['**'],
+                                value: _themeService.primaryColor,
                               ),
-                            ),
-                          );
-                        },
-                        onEnd: () {},
-                      ),
-                      const SizedBox(height: 24),
-                      // Animated text
-                      TweenAnimationBuilder<double>(
-                        tween: Tween(begin: 0.7, end: 1.0),
-                        duration: const Duration(milliseconds: 600),
-                        builder: (context, opacity, child) {
-                          return Opacity(
-                            opacity: opacity,
-                            child: Column(
-                              children: [
-                                Text(
-                                  context.t('rockClassification.analyzing') != 'rockClassification.analyzing'
-                                      ? context.t('rockClassification.analyzing')
-                                      : 'Analyzing Rock Sample',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Using 3-Stage Hierarchical AI Model',
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.8),
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
+                            ],
+                          ),
+                        ),
                       ),
                     ],
                   ),

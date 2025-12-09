@@ -1,4 +1,5 @@
 import 'package:camera/camera.dart';
+import 'package:lottie/lottie.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolab/features/RockClassification/Bloc/rock_classification_bloc.dart';
@@ -129,78 +130,29 @@ class RockClassificationView extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Pulsing animation container
-                    TweenAnimationBuilder<double>(
-                      tween: Tween(begin: 0.8, end: 1.2),
-                      duration: const Duration(milliseconds: 800),
-                      builder: (context, scale, child) {
-                        return Transform.scale(
-                          scale: scale,
-                          child: Container(
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.1),
-                              shape: BoxShape.circle,
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Lottie.asset(
+                        'assets/animations/uploading_image.json',
+                        width: 350,
+                        height: 350,
+                        delegates: LottieDelegates(
+                          values: [
+                            ValueDelegate.color(
+                              const ['**'],
+                              value: ThemeService.instance.primaryColor,
                             ),
-                            child: const CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 3,
+                            ValueDelegate.strokeColor(
+                              const ['**'],
+                              value: ThemeService.instance.primaryColor,
                             ),
-                          ),
-                        );
-                      },
-                      onEnd: () {
-                        // Restart animation (handled by TweenAnimationBuilder)
-                      },
-                    ),
-                    const SizedBox(height: 24),
-                    // Animated text
-                    TweenAnimationBuilder<double>(
-                      tween: Tween(begin: 0.7, end: 1.0),
-                      duration: const Duration(milliseconds: 600),
-                      builder: (context, opacity, child) {
-                        return Opacity(
-                          opacity: opacity,
-                          child: Column(
-                            children: [
-                              const Text(
-                                'Analyzing Rock Sample',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Using 3-Stage Hierarchical AI Model',
-                                style: TextStyle(
-                                  color: Colors.white.withOpacity(0.8),
-                                  fontSize: 14,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: const Text(
-                                  'Please wait...',
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
+                          ],
+                        ),
+                      ),
                     ),
                   ],
                 ),

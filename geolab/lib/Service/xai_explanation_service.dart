@@ -1,11 +1,38 @@
 import 'package:geolab/features/RockClassification/Bloc/rock_classification_state.dart';
+import 'package:geolab/features/Settings/components/localization.dart';
 
 class XaiExplanationService {
   
   /// Generates a dynamic, human-readable explanation based on 3-stage hierarchical data.
-  static String generateExplanation(ClassificationComplete state) {
+  /// Generates a dynamic, human-readable explanation based on 3-stage hierarchical data.
+  static String generateExplanation(ClassificationComplete state, {Map<String, dynamic>? translations}) {
     // 1. Check for detailed stage data for rich explanation
     final data = state.additionalData ?? {};
+    final loc = LocalizationService.instance;
+    
+    // Convert translation map navigation to helper
+    String t(String key) {
+       if (translations != null) {
+          final parts = key.split('.');
+          dynamic value = translations;
+          for (var part in parts) {
+            if (value is Map && value.containsKey(part)) {
+               value = value[part];
+            } else {
+               return key;
+            }
+          }
+          return value.toString();
+       }
+       return loc.translate(key);
+    }
+    
+    String tParams(String key, Map<String, String> params) {
+       String val = t(key);
+       params.forEach((k, v) => val = val.replaceAll('{$k}', v));
+       return val;
+    }
+
     // FIX: Allow partial stages. If ANY stage is present, try to generate detailed explanation.
     final hasStages = data['stage1'] != null || data['stage2'] != null || data['stage3'] != null;
 
@@ -17,7 +44,7 @@ class XaiExplanationService {
       // Fallback to backend explanation if no stages
       return data['reasoning'].toString().replaceAll('→', '->');
     } else if (state.additionalData == null) {
-      return 'Detailed hierarchical analysis is unavailable.';
+      return t('xai.detailedUnavailable');
     }
 
     
@@ -33,11 +60,11 @@ class XaiExplanationService {
       if (stage1 != null) {
         final conf1 = stage1['confidence'] as double? ?? 0.0;
         if (conf1 > 0.95) {
-          buffer.write('1. **Initial Screening**: The model identifies this as a rock with near certainty. ');
+          buffer.write('${t('xai.initialScreeningHigh')} ');
         } else if (conf1 > 0.8) {
-           buffer.write('1. **Initial Screening**: The model is fairly confident this is a rock. ');
+           buffer.write('${t('xai.initialScreeningMedium')} ');
         } else {
-           buffer.write('1. **Initial Screening**: This sample has ambiguous features, but is classified as a rock. ');
+           buffer.write('${t('xai.initialScreeningLow')} ');
         }
         buffer.writeln();
       }
@@ -48,7 +75,11 @@ class XaiExplanationService {
         final mainType = stage2['main_category'] ?? stage2['class_name'] ?? 'Unknown';
         final conf2 = stage2['confidence'] as double? ?? 0.0;
         
-        buffer.write('2. **Main Category**: It is identified as **$mainType** (${(conf2 * 100).toStringAsFixed(1)}%). ');
+        String phase2 = tParams('xai.mainCategory', {
+          'type': mainType.toString(),
+          'confidence': (conf2 * 100).toStringAsFixed(1)
+        });
+        buffer.write('$phase2 ');
         
         if (probs2 != null && probs2.isNotEmpty) {
            // Find 2nd best
@@ -57,9 +88,12 @@ class XaiExplanationService {
              final second = sorted[1];
              final margin = conf2 - (second.value as num).toDouble();
              if (margin < 0.2) {
-               buffer.write('However, there is significant resemblance to **${second.key}** as well. ');
+               String resemblance = tParams('xai.resemblance', {
+                 'type': second.key.toString()
+               });
+               buffer.write('$resemblance ');
              } else {
-               buffer.write('This differentiation is distinct. ');
+               buffer.write('${t('xai.distinct')} ');
              }
            }
         }
@@ -71,17 +105,21 @@ class XaiExplanationService {
         final subClass = stage3['class_name'] ?? state.rockType;
         final conf3 = stage3['confidence'] as double? ?? 0.0;
         
-        buffer.write('3. **Specific Type**: Finally, the model classifies it as **$subClass** (${(conf3 * 100).toStringAsFixed(1)}% confidence). ');
+        String phase3 = tParams('xai.specificType', {
+            'type': subClass.toString(),
+            'confidence': (conf3 * 100).toStringAsFixed(1)
+        });
+        buffer.write('$phase3 ');
         
         // Detailed texture/feature check (hypothetical, based on margin)
         if (conf3 > 0.9) {
-           buffer.write('The specific visual patterns (texture, grain size) strongly match known samples of this type.');
+           buffer.write(t('xai.textureMatch'));
         } else {
-           buffer.write('There is some variation here, possibly due to weathering or unusual mineral composition.');
+           buffer.write(t('xai.variation'));
         }
         buffer.writeln();
       } else {
-         buffer.writeln('3. **Specific Type**: The model could not confidently refine the classification further than the main category.');
+         buffer.writeln(t('xai.unrefined'));
       }
 
     } else {
@@ -99,18 +137,25 @@ class XaiExplanationService {
 
       }
           
-      if (probabilities.isEmpty) return state.additionalData?['reasoning'] ?? 'No data available.';
+      if (probabilities.isEmpty) return state.additionalData?['reasoning'] ?? t('xai.detailedUnavailable');
 
       final sortedEntries = probabilities.entries.toList()
         ..sort((a, b) => b.value.compareTo(a.value));
       final topMatch = sortedEntries[0];
       
-      buffer.writeln('The AI model identifies this as **${topMatch.key}** with **${(topMatch.value * 100).toStringAsFixed(1)}%** confidence.');
+      String fallbackId = tParams('xai.fallbackIdentified', {
+        'type': topMatch.key.toString(),
+        'confidence': (topMatch.value * 100).toStringAsFixed(1)
+      });
+      buffer.writeln(fallbackId);
       
       if (sortedEntries.length > 1) {
          final runnerUp = sortedEntries[1];
          if ((topMatch.value - runnerUp.value) < 0.2) {
-            buffer.writeln('It also shares significant features with **${runnerUp.key}**.');
+             String fallbackRes = tParams('xai.fallbackResemblance', {
+               'type': runnerUp.key.toString()
+             });
+            buffer.writeln(fallbackRes);
          }
       }
     }
