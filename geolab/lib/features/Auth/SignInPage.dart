@@ -16,6 +16,7 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:geolab/utils/error_handler.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_svg/flutter_svg.dart';
+
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
 

@@ -455,50 +455,7 @@ class _HomePageState extends State<HomePage> {
       children: [
         _buildCameraPreview(),
         _buildOverlay(),
-        // Add Classification Animation Overlay
-        BlocBuilder<RockClassificationBloc, RockClassificationState>(
-          builder: (context, state) {
-            if (state is Classifying) {
-              return Container(
-                color: Colors.black.withOpacity(0.6),
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Lottie Animation
-                      // Lottie Animation
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Lottie.asset(
-                          'assets/animations/uploading_image.json',
-                          width: 350,
-                          height: 350,
-                          delegates: LottieDelegates(
-                            values: [
-                              ValueDelegate.color(
-                                const ['**'],
-                                value: _themeService.primaryColor,
-                              ),
-                              ValueDelegate.strokeColor(
-                                const ['**'],
-                                value: _themeService.primaryColor,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }
-            return const SizedBox.shrink();
-          },
-        ),
+
       ],
     );
   }
@@ -741,7 +698,62 @@ class _HomePageState extends State<HomePage> {
             ),
             borderRadius: BorderRadius.circular(20),
           ),
-          child: _buildCaptureAreaContent(),
+          child: Stack(
+            fit: StackFit.expand,
+            alignment: Alignment.center,
+            children: [
+              BlocBuilder<RockClassificationBloc, RockClassificationState>(
+                builder: (context, state) {
+                   // If classifying, hide the prompt/content underneath so it doesn't bleed through
+                   if (state is Classifying) {
+                     return const SizedBox.shrink();
+                   }
+                   return _buildCaptureAreaContent();
+                },
+              ),
+              BlocBuilder<RockClassificationBloc, RockClassificationState>(
+                builder: (context, state) {
+                  if (state is Classifying) {
+                    return Positioned.fill(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(18),
+                        child: Container(
+                          color: Colors.transparent,
+                          child: Center(
+                            child: Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Lottie.asset(
+                                'assets/animations/uploading_image.json',
+                                width: 300,
+                                height: 300,
+                                delegates: LottieDelegates(
+                                  values: [
+                                    ValueDelegate.color(
+                                      const ['**'],
+                                      value: _themeService.primaryColor,
+                                    ),
+                                    ValueDelegate.strokeColor(
+                                      const ['**'],
+                                      value: _themeService.primaryColor,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -767,9 +779,9 @@ class _HomePageState extends State<HomePage> {
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
       child: kIsWeb && _capturedImageBytes != null
-          ? Image.memory(_capturedImageBytes!, fit: BoxFit.contain)
+          ? Image.memory(_capturedImageBytes!, fit: BoxFit.cover)
           : _capturedImage != null
-              ? Image.file(_capturedImage!, fit: BoxFit.contain)
+              ? Image.file(_capturedImage!, fit: BoxFit.cover)
               : const SizedBox(),
     );
   }

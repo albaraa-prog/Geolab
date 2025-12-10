@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolab/Service/api_service.dart';
 import 'package:geolab/Service/supabase_service.dart';
@@ -7,6 +8,8 @@ import 'package:geolab/models/user_model.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final ApiService _apiService;
+  // ignore: unused_field
+  StreamSubscription<dynamic>? _authStateSubscription;
 
   AuthBloc({required ApiService apiService})
       : _apiService = apiService,
@@ -18,6 +21,27 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthPasswordResetRequested>(_onPasswordResetRequested);
     on<AuthLogoutRequested>(_onLogoutRequested);
     on<AuthCheckRequested>(_onCheckRequested);
+    
+    _initializeAuthStateListener();
+  }
+
+  void _initializeAuthStateListener() {
+    try {
+      if (SupabaseService.isInitialized) {
+        _authStateSubscription = SupabaseService.authStateChanges.listen((data) {
+          // When auth state changes (e.g. email verified, logged in via link), check auth
+          add(AuthCheckRequested());
+        });
+      }
+    } catch (e) {
+      // Supabase might not be initialized yet, which is fine
+    }
+  }
+
+  @override
+  Future<void> close() {
+    _authStateSubscription?.cancel();
+    return super.close();
   }
 
   Future<void> _onLoginRequested(

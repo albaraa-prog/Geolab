@@ -180,6 +180,27 @@ class SupabaseService {
       redirectTo: finalRedirectTo,
     );
   }
+
+  /// Update user profile (email and metadata like name)
+  static Future<UserResponse> updateUserProfile({
+    String? email,
+    String? name,
+  }) async {
+    if (!_isInitialized) {
+      throw Exception('Supabase has not been initialized. Please check your .env file.');
+    }
+    final clientInstance = client;
+    if (clientInstance == null) {
+      throw Exception('Supabase client is not available.');
+    }
+
+    final attributes = UserAttributes(
+      email: email,
+      data: name != null ? {'name': name} : null,
+    );
+
+    return await clientInstance.auth.updateUser(attributes);
+  }
   
   /// Get current user
   static User? get currentUser {

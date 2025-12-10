@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart'; // Import flutter_animate
+import 'package:flutter_animate/flutter_animate.dart'; 
 import 'package:geolab/config/theme.dart';
 import 'package:geolab/utils/responsive_layout.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -79,11 +79,6 @@ class SplashScreen extends StatelessWidget {
             .fade(duration: 800.ms, delay: 400.ms),
             
             const SizedBox(height: 60),
-            
-            // Loading indicator (subtle) - Optional, but gives feedback if waiting
-            // Using a simple pulsing dot or custom indicator might be better, 
-            // but keeping it completely clean as per previous request is safer.
-            // Adding a very subtle bottom text instead.
           ],
         ),
       ),

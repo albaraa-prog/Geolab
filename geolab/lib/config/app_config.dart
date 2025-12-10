@@ -53,17 +53,21 @@ class AppConfig {
         return url.endsWith('/api') ? url : '$url/api';
       }
     } catch (e) {
-
+      // ignore
     }
     
     // 2. Handle Platform-specific defaults
     if (kIsWeb) {
       // Web always uses localhost (or relative path in prod)
       return 'http://localhost:8000/api';
+    } 
+    
+    if (Platform.isAndroid) {
+      // Android Emulator loopback address
+      return 'http://10.0.2.2:8000/api';
     }
+
     // 3. Default fallback (Windows, local, etc)
-    // NOTE: For Android, we are using 'adb reverse tcp:8000 tcp:8000'
-    // so localhost works correctly and is more stable than 10.0.2.2
     return 'http://localhost:8000/api';
   }
 

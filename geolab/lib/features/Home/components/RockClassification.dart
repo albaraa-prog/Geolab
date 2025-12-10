@@ -120,41 +120,45 @@ class RockClassificationView extends StatelessWidget {
       final image =
           state is ImageCaptured ? state.image : (state as Classifying).image;
       return Stack(
+        fit: StackFit.expand,
         children: [
-          Image.file(image!, fit: BoxFit.contain),
+          Center(child: Image.file(image!, fit: BoxFit.contain)),
           if (state is Classifying)
             // Enhanced loading animation
-            Container(
-              color: Colors.black.withOpacity(0.6),
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Lottie.asset(
-                        'assets/animations/uploading_image.json',
-                        width: 350,
-                        height: 350,
-                        delegates: LottieDelegates(
-                          values: [
-                            ValueDelegate.color(
-                              const ['**'],
-                              value: ThemeService.instance.primaryColor,
-                            ),
-                            ValueDelegate.strokeColor(
-                              const ['**'],
-                              value: ThemeService.instance.primaryColor,
-                            ),
-                          ],
+            Positioned.fill(
+              child: Container(
+                color: Colors.black.withOpacity(0.6),
+                child: Align(
+                  alignment: const Alignment(0, -0.5),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Lottie.asset(
+                          'assets/animations/uploading_image.json',
+                          width: 120,
+                          height: 120,
+                          delegates: LottieDelegates(
+                            values: [
+                              ValueDelegate.color(
+                                const ['**'],
+                                value: ThemeService.instance.primaryColor,
+                              ),
+                              ValueDelegate.strokeColor(
+                                const ['**'],
+                                value: ThemeService.instance.primaryColor,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

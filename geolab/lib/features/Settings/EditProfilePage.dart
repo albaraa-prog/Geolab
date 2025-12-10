@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:geolab/features/Auth/Bloc/auth_bloc.dart';
 import 'package:geolab/features/Auth/Bloc/auth_state.dart';
 import 'package:geolab/Service/theme_service.dart';
+import 'package:geolab/Service/supabase_service.dart';
 import 'package:geolab/utils/custom_back_button.dart';
 import 'package:geolab/utils/rtl_wrapper.dart';
 import 'package:geolab/utils/app_localizations.dart';
@@ -47,20 +49,56 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   void _saveProfile() async {
     if (_formKey.currentState?.validate() ?? false) {
+      final authState = context.read<AuthBloc>().state;
+      if (authState is! AuthAuthenticated) return;
+      
       setState(() => _isLoading = true);
       
       try {
-        // Note: Profile update logic simulates a network delay for now.
-        // Integration with backend API to be implemented in future iteration.
-        await Future.delayed(const Duration(seconds: 1));
+        final currentEmail = authState.user.email;
+        final newEmail = _emailController.text.trim();
+        final currentName = authState.user.name ?? authState.user.email.split('@')[0];
+        final newName = _nameController.text.trim();
+        
+        final emailChanged = currentEmail != newEmail;
+        final nameChanged = currentName != newName;
+
+        if (!emailChanged && !nameChanged) {
+          Navigator.pop(context);
+          return;
+        }
+
+        // Import SupabaseService if not imported, or make sure it's available
+        // Assuming SupabaseService is available via import 'package:geolab/Service/supabase_service.dart';
+        // If not, we rely on the context to have it or import it.
+        // Based on file analysis, we need to add the import.
+        
+        // Call update user profile
+        // We need to import SupabaseService at the top of the file
+        await SupabaseService.updateUserProfile(
+          email: emailChanged ? newEmail : null,
+          name: nameChanged ? newName : null,
+        );
         
         if (mounted) {
+          String message;
+          if (emailChanged) {
+            message = 'Confirmation email sent to $newEmail. Please verify to complete update.';
+          } else {
+            message = context.t('settings.profile.updated');
+          }
+          
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(context.t('settings.profile.updated')),
+              content: Text(message),
               backgroundColor: ThemeService.instance.primaryColor,
+              duration: const Duration(seconds: 4),
             ),
           );
+          
+          // Refresh auth state would happen via stream listener usually, 
+          // or we can manually ask to reload user if needed.
+          // For now, pop back.
           Navigator.pop(context);
         }
       } catch (e) {
@@ -102,9 +140,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
             return GestureDetector(
               onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-              child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Form(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: kIsWeb ? 800 : double.infinity),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                    child: Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -264,8 +305,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     ),
                   ],
                 ),
+                  ),
+                ),
               ),
-              ),
+            ),
             );
           },
         ),
