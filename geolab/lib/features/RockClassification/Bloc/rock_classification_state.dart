@@ -48,11 +48,12 @@ class ImageCaptured extends RockClassificationState {
 
 class Classifying extends RockClassificationState {
   final io.File? image; // Nullable for web (bytes-based)
+  final Uint8List? imageBytes; // For web
 
-  const Classifying(this.image);
+  const Classifying(this.image, {this.imageBytes});
 
   @override
-  List<Object?> get props => [image];
+  List<Object?> get props => [image, imageBytes];
 }
 
 class ClassificationComplete extends RockClassificationState {

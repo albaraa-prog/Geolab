@@ -34,6 +34,14 @@ String? validatePassword(String? value) {
   return null;
 }
 
+String? validateLoginPassword(String? value) {
+  final password = value?.trim() ?? '';
+  if (password.isEmpty) {
+    return 'Please enter your password';
+  }
+  return null;
+}
+
 String? validateName(String? value) {
   final name = value?.trim() ?? '';
   if (name.isEmpty) {

@@ -117,12 +117,17 @@ class RockClassificationView extends StatelessWidget {
     }
 
     if (state is ImageCaptured || state is Classifying) {
-      final image =
-          state is ImageCaptured ? state.image : (state as Classifying).image;
+      final image = state is ImageCaptured ? state.image : (state as Classifying).image;
+      final imageBytes = state is Classifying ? (state as Classifying).imageBytes : null;
+      
       return Stack(
         fit: StackFit.expand,
         children: [
-          Center(child: Image.file(image!, fit: BoxFit.contain)),
+          Center(
+            child: imageBytes != null
+              ? Image.memory(imageBytes, fit: BoxFit.contain)
+              : (image != null ? Image.file(image, fit: BoxFit.contain) : const SizedBox()),
+          ),
           if (state is Classifying)
             // Enhanced loading animation
             Positioned.fill(
@@ -143,6 +148,8 @@ class RockClassificationView extends StatelessWidget {
                           'assets/animations/uploading_image.json',
                           width: 120,
                           height: 120,
+                          repeat: true,
+                          animate: true,
                           delegates: LottieDelegates(
                             values: [
                               ValueDelegate.color(

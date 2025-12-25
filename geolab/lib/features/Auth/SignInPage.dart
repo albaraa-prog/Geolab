@@ -212,7 +212,7 @@ class _SignInPageState extends State<SignInPage> {
               controller: _passwordController,
               label: context.t('auth.password'),
               obscureText: _obscurePassword,
-              validator: validatePassword,
+              validator: validateLoginPassword,
               icon: HugeIcons.strokeRoundedLock,
               showPasswordToggle: true,
               onToggleObscureText: () {
@@ -407,7 +407,7 @@ class _SignInPageState extends State<SignInPage> {
               controller: _passwordController,
               label: context.t('auth.password'),
               obscureText: _obscurePassword,
-              validator: validatePassword,
+              validator: validateLoginPassword,
               icon: HugeIcons.strokeRoundedLock,
               showPasswordToggle: true,
               onToggleObscureText: () {

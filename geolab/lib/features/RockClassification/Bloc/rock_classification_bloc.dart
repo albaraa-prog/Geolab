@@ -160,7 +160,7 @@ class RockClassificationBloc
   ) async {
     // For web, we use bytes directly
     try {
-      emit(const Classifying(null));
+      emit(Classifying(null, imageBytes: event.imageBytes));
       // Check if user is authenticated
       final user = await _apiService.getCurrentUser();
       if (user == null) {
