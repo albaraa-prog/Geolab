@@ -132,6 +132,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
     try {
       // If this is a signup with name and password
+      // If this is a signup with name and password
       if (event.name.isNotEmpty && event.password.isNotEmpty) {
         // Try to sign up - Supabase will automatically prevent duplicates
         final authResponse = await SupabaseService.signUpWithPassword(
@@ -144,22 +145,38 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           },
         );
         
-        // If signup successful, send verification email
+        // If signup successful, check if we have a session (auto-confirmed) or need verification
         if (authResponse.user != null) {
-          await _apiService.sendEmailVerification(
-            email: event.email,
-            name: event.name,
-            password: event.password,
-          );
-          emit(AuthEmailVerificationSent(
-            message: 'Verification email sent successfully. Please check your inbox.',
-            email: event.email,
-          ));
+          if (authResponse.session != null) {
+             // User is authenticated immediately (auto-confirm enabled)
+             final user = await _apiService.getCurrentUser();
+             if (user != null) {
+               emit(AuthAuthenticated(user: user));
+             } else {
+               // Fallback
+               final userFromResponse = UserModel(
+                 id: authResponse.user!.id,
+                 email: authResponse.user!.email ?? '',
+                 name: event.name,
+                 subscriptionTier: 'free', 
+                 requestCount: 0,
+                 dailyLimit: 5,
+                 createdAt: DateTime.now(),
+               );
+               emit(AuthAuthenticated(user: userFromResponse));
+             }
+          } else {
+             // Verification email sent by Supabase automatically
+             emit(AuthEmailVerificationSent(
+               message: 'Verification email sent successfully. Please check your inbox.',
+               email: event.email,
+             ));
+          }
         } else {
           throw Exception('Failed to create account');
         }
       } else {
-        // Just send verification email for sign-in
+        // Just send verification email for sign-in (Magic Link flow)
         await _apiService.sendEmailVerification(
           email: event.email,
           name: event.name,

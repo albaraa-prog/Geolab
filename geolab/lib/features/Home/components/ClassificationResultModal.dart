@@ -231,21 +231,36 @@ class ClassificationResultModal extends StatelessWidget {
 
             return Column(
               children: [
-                 // Display Charts Loop
-                 if (probs1.isNotEmpty) _buildChartSection(context, context.t('rockClassification.stage1'), probs1),
-                 if (probs2.isNotEmpty) _buildChartSection(context, context.t('rockClassification.stage2'), probs2),
-                 if (probs3.isNotEmpty) _buildChartSection(context, context.t('rockClassification.stage3'), probs3),
+                  if (probs1.isNotEmpty) _buildChartSection(context, context.t('rockClassification.stage1'), probs1),
+                  
+                  if (data!['stage2'] != null || data!['comparison_stage2'] != null) ...[
+                    Text(context.t('rockClassification.stage2'), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: themeService.textColor)),
+                    const SizedBox(height: 8),
+                    if (data!['comparison_stage2'] != null) 
+                      _buildComparisonSection(context, data!['comparison_stage2'], probs2),
+                    if (probs2.isNotEmpty) ...[
+                      const SizedBox(height: 32),
+                      SizedBox(
+                        height: 180,
+                        child: XaiDistributionChart(
+                          probabilities: probs2,
+                          themeService: themeService
+                        )
+                      ),
+                    ],
+                    const SizedBox(height: 24),
+                  ],
 
-
-              ],
-            );
+                  if (probs3.isNotEmpty) _buildChartSection(context, context.t('rockClassification.stage3'), probs3),
+                ],
+              );
           },
         ),
       ],
     );
   }
   
-  Widget _buildChartSection(BuildContext context, String title, Map<String, double> probs) {
+   Widget _buildChartSection(BuildContext context, String title, Map<String, double> probs) {
       if (probs.isEmpty) return const SizedBox.shrink();
       
       return Column(
@@ -263,6 +278,130 @@ class ClassificationResultModal extends StatelessWidget {
            const SizedBox(height: 24),
         ],
       );
+  }
+
+  Widget _buildComparisonSection(BuildContext context, dynamic comparisonData, Map<String, double> primaryProbs) {
+    if (comparisonData == null || comparisonData is! Map) return const SizedBox.shrink();
+    
+    final resnet = comparisonData['resnet_model'];
+    final dtree = comparisonData['decision_tree_model'];
+
+    // Get primary model's top prediction if available
+    String primaryPred = 'N/A';
+    double primaryConf = 0.0;
+    if (primaryProbs.isNotEmpty) {
+      final sorted = primaryProbs.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+      primaryPred = sorted.first.key;
+      primaryConf = sorted.first.value;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Primary Hierarchical Model
+            if (primaryProbs.isNotEmpty) ...[
+              _buildComparisonRow(
+                context,
+                'Hierarchical',
+                primaryPred,
+                primaryConf,
+              ),
+              const SizedBox(height: 8),
+              Divider(color: themeService.textColor.withOpacity(0.05)),
+              const SizedBox(height: 8),
+            ],
+            _buildComparisonRow(
+              context,
+              'ResNet50',
+              resnet?['prediction'] ?? 'N/A',
+              (resnet?['confidence'] as num?)?.toDouble() ?? 0.0,
+            ),
+            const SizedBox(height: 8),
+            Divider(color: themeService.textColor.withOpacity(0.05)),
+            const SizedBox(height: 8),
+            _buildComparisonRow(
+              context,
+              'Decision Tree',
+              dtree?['prediction'] ?? 'N/A',
+              (dtree?['confidence'] as num?)?.toDouble() ?? 0.0,
+            ),
+          ],
+      ),
+    );
+  }
+
+  Widget _buildComparisonRow(BuildContext context, String modelName, String prediction, double confidence) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              modelName,
+              style: TextStyle(
+                fontSize: 10,
+                color: themeService.textColor.withOpacity(0.6),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            Text(
+              '${(confidence * 100).toStringAsFixed(1)}%',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                color: themeService.primaryColor,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            return Stack(
+              children: [
+                Container(
+                  height: 4,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: themeService.primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 800),
+                  curve: Curves.easeOutCubic,
+                  height: 4,
+                  width: constraints.maxWidth * confidence,
+                  decoration: BoxDecoration(
+                    color: themeService.primaryColor,
+                    borderRadius: BorderRadius.circular(2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: themeService.primaryColor.withOpacity(0.2),
+                        blurRadius: 4,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+        const SizedBox(height: 4),
+        Text(
+          prediction.replaceAll('_', ' ').toUpperCase(),
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            color: themeService.textColor,
+          ),
+        ),
+      ],
+    );
   }
 
   Future<void> _shareResult(BuildContext context) async {

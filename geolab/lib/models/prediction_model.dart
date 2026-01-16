@@ -16,6 +16,7 @@ class PredictionModel {
   final Map<String, dynamic>? stage1;
   final Map<String, dynamic>? stage2;
   final Map<String, dynamic>? stage3;
+  final Map<String, dynamic>? comparisonStage2;
   final DateTime timestamp;
 
   PredictionModel({
@@ -30,6 +31,7 @@ class PredictionModel {
     this.stage1,
     this.stage2,
     this.stage3,
+    this.comparisonStage2,
     required this.timestamp,
   });
 
@@ -82,6 +84,7 @@ class PredictionModel {
       stage1: parseMap(json['stage1'] ?? metadata['stage1']),
       stage2: parseMap(json['stage2'] ?? metadata['stage2']),
       stage3: parseMap(json['stage3'] ?? metadata['stage3']),
+      comparisonStage2: parseMap(json['comparison_stage2'] ?? metadata['comparison_stage2']),
       timestamp: json['timestamp'] != null
           ? DateTime.parse(json['timestamp'])
           : DateTime.now(),
