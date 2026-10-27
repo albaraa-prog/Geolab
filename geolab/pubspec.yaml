@@ -96,6 +96,10 @@ dependencies:
   http_parser: ^4.1.2
   pdf: ^3.11.3
 
+  # On-device inference (Android, iOS)
+  tflite_flutter: ^0.11.0
+  image: ^4.2.0
+
 dev_dependencies:
   flutter_launcher_icons: ^0.13.1
   flutter_native_splash: ^2.4.0
@@ -128,6 +132,7 @@ flutter:
     - assets/translations/
     - assets/images/
     - assets/animations/uploading_image.json
+    - assets/models/
 
     - fonts/Cairo-Regular.ttf
     - .env

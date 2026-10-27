@@ -3,6 +3,8 @@ import 'dart:io' as io;
 import 'package:camera/camera.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolab/Service/api_service.dart';
+import 'package:geolab/Service/network_service.dart';
+import 'package:geolab/Service/on_device_classifier.dart';
 import 'package:geolab/Service/rock_classification_service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -99,6 +101,16 @@ class RockClassificationBloc
     Emitter<RockClassificationState> emit,
   ) async {
     emit(Classifying(event.image)); // File-based for mobile
+
+    // No connection: use the bundled model when the app ships one
+    if (!await NetworkService().checkConnectivity()) {
+      final offline = await _classifyOnDevice(event.image);
+      if (offline != null) {
+        emit(offline);
+        return;
+      }
+    }
+
     try {
       // Check if user is authenticated
       final user = await _apiService.getCurrentUser();
@@ -138,6 +150,15 @@ class RockClassificationBloc
     } catch (e) {
 
       String errorMessage = e.toString();
+
+      // Server unreachable: fall back to the bundled model
+      if (_isConnectionError(errorMessage)) {
+        final offline = await _classifyOnDevice(event.image);
+        if (offline != null) {
+          emit(offline);
+          return;
+        }
+      }
       
       // Provide user-friendly error messages
       if (errorMessage.contains('Image processing failed')) {
@@ -151,6 +172,33 @@ class RockClassificationBloc
       } else {
         emit(ClassificationError('Classification error: ${e.toString()}'));
       }
+    }
+  }
+
+  static bool _isConnectionError(String message) =>
+      message.contains('internet connection') ||
+      message.contains('Connection timeout') ||
+      message.contains('Connection error') ||
+      message.contains('Network error');
+
+  /// Classify with the on-device model, or null when it isn't bundled
+  Future<ClassificationComplete?> _classifyOnDevice(io.File image) async {
+    final classifier = await OnDeviceClassifier.load();
+    if (classifier == null) return null;
+    try {
+      final result = await classifier.classify(await image.readAsBytes());
+      final finalPrediction = result['final_prediction'] as Map<String, dynamic>;
+      final isRock = finalPrediction['classification'] != 'non-rock';
+      return ClassificationComplete(
+        rockType: isRock
+            ? (finalPrediction['subclass'] ?? finalPrediction['main_category'] ?? 'rock') as String
+            : 'non_rock',
+        confidence: (finalPrediction['confidence'] as num).toDouble(),
+        image: image,
+        additionalData: result,
+      );
+    } catch (_) {
+      return null;
     }
   }
 
