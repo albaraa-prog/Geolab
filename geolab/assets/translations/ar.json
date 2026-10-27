@@ -227,7 +227,10 @@
     "unrefined": "3. **النوع المحدد**: لم يتمكن النموذج من تحسين التصنيف بثقة أبعد من الفئة الرئيسية.",
     "detailedUnavailable": "التحليل الهرمي المفصل غير متاح.",
     "fallbackIdentified": "يحدد نموذج الذكاء الاصطناعي هذا على أنه **{type}** بثقة **{confidence}%**.",
-    "fallbackResemblance": "كما تشترك في ميزات مهمة مع **{type}**."
+    "fallbackResemblance": "كما تشترك في ميزات مهمة مع **{type}**.",
+    "gradcamTitle": "أين ركّز النموذج",
+    "gradcamCaption": "المناطق الدافئة هي الأكثر تأثيرًا في توقع {type} (المرحلة {stage}، {method}).",
+    "gradcamOpacity": "شدة الخريطة الحرارية"
   },
   "feedback": {
     "title": "التعليقات",

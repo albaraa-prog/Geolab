@@ -228,7 +228,10 @@
     "unrefined": "3. **Specific Type**: The model could not confidently refine the classification further than the main category.",
     "detailedUnavailable": "Detailed hierarchical analysis is unavailable.",
     "fallbackIdentified": "The AI model identifies this as **{type}** with **{confidence}%** confidence.",
-    "fallbackResemblance": "It also shares significant features with **{type}**."
+    "fallbackResemblance": "It also shares significant features with **{type}**.",
+    "gradcamTitle": "Where the model looked",
+    "gradcamCaption": "Warm areas influenced the {type} prediction the most (stage {stage}, {method}).",
+    "gradcamOpacity": "Heatmap strength"
   },
   "feedback": {
     "title": "Feedback",

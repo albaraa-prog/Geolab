@@ -671,6 +671,7 @@ class ApiService {
           'stage2': response.data['stage2'],
           'stage3': response.data['stage3'],
           'comparison_stage2': response.data['comparison_stage2'],
+          'gradcam': response.data['gradcam'],
         };
       } else {
         // Fallback on API error

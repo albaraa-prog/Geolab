@@ -5,6 +5,7 @@ import 'package:geolab/Service/api_service.dart' as geolabApi;
 import 'package:geolab/Service/theme_service.dart';
 import 'package:geolab/features/RockClassification/Bloc/rock_classification_state.dart';
 import 'package:geolab/features/Home/components/XaiDistributionChart.dart';
+import 'package:geolab/features/Home/components/GradCamView.dart';
 import 'package:geolab/utils/app_localizations.dart';
 import 'package:geolab/utils/responsive_layout.dart';
 import 'package:geolab/utils/rtl_wrapper.dart';
@@ -252,6 +253,12 @@ class ClassificationResultModal extends StatelessWidget {
                   ],
 
                   if (probs3.isNotEmpty) _buildChartSection(context, context.t('rockClassification.stage3'), probs3),
+
+                  if (GradCamView.isAvailable(data!['gradcam']))
+                    GradCamView(
+                      gradcam: Map<String, dynamic>.from(data!['gradcam'] as Map),
+                      themeService: themeService,
+                    ),
                 ],
               );
           },
