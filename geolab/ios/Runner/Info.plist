@@ -53,7 +53,7 @@
 		<string>Access is required to save classified rock images</string>
 		<key>NSAppTransportSecurity</key>
 		<dict>
-			<key>NSAllowsArbitraryLoads</key>
+			<key>NSAllowsLocalNetworking</key>
 			<true/>
 			<key>NSExceptionDomains</key>
 			<dict>

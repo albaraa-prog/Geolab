@@ -10,8 +10,8 @@
         <domain includeSubdomains="true">192.168.0.100</domain>
     </domain-config>
     
-    <!-- For production, you should only allow HTTPS -->
-    <base-config cleartextTrafficPermitted="true">
+    <!-- Everything else must use HTTPS (the Supabase token is sent on every API call) -->
+    <base-config cleartextTrafficPermitted="false">
         <trust-anchors>
             <certificates src="system"/>
         </trust-anchors>

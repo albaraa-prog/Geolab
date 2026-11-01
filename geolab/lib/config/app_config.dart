@@ -1,5 +1,5 @@
 import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, kReleaseMode;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AppConfig {
@@ -50,10 +50,25 @@ class AppConfig {
       // 1. Prioritize .env override if strictly provided
       final url = dotenv.env['FLASK_API_URL'];
       if (url != null && url.isNotEmpty && url != 'YOUR_FLASK_API_URL') {
+        // The Supabase access token is sent on every API request, so release
+        // builds must never talk to the API over plain HTTP.
+        if (kReleaseMode && !url.startsWith('https://')) {
+          throw StateError(
+            'FLASK_API_URL must use https:// in release builds. Got: $url'
+          );
+        }
         return url.endsWith('/api') ? url : '$url/api';
       }
+    } on StateError {
+      rethrow;
     } catch (e) {
       // ignore
+    }
+
+    if (kReleaseMode) {
+      throw StateError(
+        'FLASK_API_URL is not set. Release builds need an https:// API URL in .env'
+      );
     }
     
     // 2. Handle Platform-specific defaults
